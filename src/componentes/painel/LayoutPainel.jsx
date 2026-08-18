@@ -1,12 +1,12 @@
 import { createElement, useState } from 'react'
+import { NavLink } from 'react-router-dom'
 import { LogoMarca } from '../marca/LogoMarca'
-import { BellIcon, ChatIcon, GridIcon, MenuIcon, SettingsIcon, UsersIcon } from './IconesPainel'
+import { BellIcon, GridIcon, HistoryIcon, MenuIcon, QuestionIcon } from './IconesPainel'
 
 const navigation = [
-  { label: 'Visão geral', icon: GridIcon, active: true },
-  { label: 'Atendimentos', icon: ChatIcon },
-  { label: 'Pessoas', icon: UsersIcon },
-  { label: 'Configurações', icon: SettingsIcon },
+  { label: 'Visão geral', icon: GridIcon, to: '/painel', end: true },
+  { label: 'Perguntas & Respostas', icon: QuestionIcon, to: '/painel/perguntas' },
+  { label: 'Histórico', icon: HistoryIcon, to: '/painel/historico' },
 ]
 
 export function LayoutPainel({ children }) {
@@ -18,10 +18,10 @@ export function LayoutPainel({ children }) {
       <aside className={`fixed inset-y-0 left-0 z-40 flex w-68 flex-col border-r border-emerald-900 bg-emerald-950 px-4 py-6 text-white transition-transform lg:translate-x-0 ${menuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="px-3"><LogoMarca light /></div>
         <nav className="mt-10 space-y-1" aria-label="Menu principal">
-          {navigation.map(({ label, icon, active }) => (
-            <button key={label} type="button" className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${active ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/30' : 'text-emerald-100/65 hover:bg-white/5 hover:text-white'}`}>
-              {createElement(icon, { className: 'h-5 w-5' })}{label}
-            </button>
+          {navigation.map(({ label, icon, to, end }) => (
+            <NavLink key={label} to={to} end={end} onClick={() => setMenuOpen(false)} className={({ isActive }) => `flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium transition ${isActive ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/30' : 'text-emerald-100/65 hover:bg-white/5 hover:text-white'}`}>
+              {createElement(icon, { className: 'h-5 w-5 shrink-0' })}{label}
+            </NavLink>
           ))}
         </nav>
         <div className="mt-auto rounded-2xl border border-white/10 bg-white/5 p-4">

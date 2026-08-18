@@ -8,6 +8,18 @@ const PaginaPainel = lazy(() =>
   })),
 )
 
+const PaginaPerguntas = lazy(() =>
+  import('./paginas/PaginaPerguntas').then((module) => ({
+    default: module.PaginaPerguntas,
+  })),
+)
+
+const PaginaHistorico = lazy(() =>
+  import('./paginas/PaginaHistorico').then((module) => ({
+    default: module.PaginaHistorico,
+  })),
+)
+
 function PageLoading() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50">
@@ -29,6 +41,22 @@ function Aplicacao() {
           element={
             <Suspense fallback={<PageLoading />}>
               <PaginaPainel />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/painel/perguntas"
+          element={
+            <Suspense fallback={<PageLoading />}>
+              <PaginaPerguntas />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/painel/historico"
+          element={
+            <Suspense fallback={<PageLoading />}>
+              <PaginaHistorico />
             </Suspense>
           }
         />
