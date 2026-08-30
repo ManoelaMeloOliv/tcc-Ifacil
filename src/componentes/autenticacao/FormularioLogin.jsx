@@ -2,14 +2,29 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { EmailIcon, EyeIcon, LockIcon } from '../interface/Icones'
 import { CampoFormulario } from '../interface/CampoFormulario'
+import { loginAdmin } from '../../servicos/autenticacao'
 
 export function FormularioLogin() {
   const [showPassword, setShowPassword] = useState(false)
+  const [email, setEmail] = useState('')
+  const [senha, setSenha] = useState('')
+  const [erro, setErro] = useState('')
+  const [enviando, setEnviando] = useState(false)
   const navigate = useNavigate()
 
-  function handleSubmit(event) {
+  async function handleSubmit(event) {
     event.preventDefault()
-    navigate('/painel')
+    setErro('')
+    setEnviando(true)
+
+    try {
+      await loginAdmin(email, senha)
+      navigate('/painel', { replace: true })
+    } catch (falha) {
+      setErro(falha.message || 'Não foi possível entrar. Tente novamente.')
+    } finally {
+      setEnviando(false)
+    }
   }
 
   const passwordAction = (
@@ -34,6 +49,9 @@ export function FormularioLogin() {
         icon={EmailIcon}
         placeholder="seuemail@exemplo.com"
         autoComplete="email"
+        value={email}
+        onChange={(event) => setEmail(event.target.value)}
+        disabled={enviando}
         required
       />
 
@@ -47,8 +65,17 @@ export function FormularioLogin() {
         placeholder="Digite sua senha"
         autoComplete="current-password"
         minLength="6"
+        value={senha}
+        onChange={(event) => setSenha(event.target.value)}
+        disabled={enviando}
         required
       />
+
+      {erro && (
+        <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600 ring-1 ring-inset ring-red-100">
+          {erro}
+        </p>
+      )}
 
       <div className="flex items-center justify-between gap-4 text-sm">
         <label className="flex cursor-pointer items-center gap-2.5 text-slate-600">
@@ -67,9 +94,11 @@ export function FormularioLogin() {
 
       <button
         type="submit"
-        className="mt-2 flex h-13 w-full items-center justify-center rounded-xl bg-emerald-600 px-5 font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/30 active:translate-y-0"
+        disabled={enviando}
+        className="mt-2 flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/30 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
       >
-        Entrar no painel
+        {enviando && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
+        {enviando ? 'Entrando...' : 'Entrar no painel'}
       </button>
     </form>
   )

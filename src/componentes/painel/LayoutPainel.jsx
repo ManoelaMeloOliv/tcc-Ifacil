@@ -1,7 +1,9 @@
 import { createElement, useState } from 'react'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import { LogoMarca } from '../marca/LogoMarca'
-import { BellIcon, GridIcon, HistoryIcon, MenuIcon, QuestionIcon } from './IconesPainel'
+import { BellIcon, GridIcon, HistoryIcon, LogoutIcon, MenuIcon, QuestionIcon } from './IconesPainel'
+import { useSessao } from '../autenticacao/useSessao'
+import { logoutAdmin } from '../../servicos/autenticacao'
 
 const navigation = [
   { label: 'Visão geral', icon: GridIcon, to: '/painel', end: true },
@@ -11,6 +13,22 @@ const navigation = [
 
 export function LayoutPainel({ children }) {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [saindo, setSaindo] = useState(false)
+  const { sessao } = useSessao()
+  const navigate = useNavigate()
+
+  const email = sessao?.user?.email ?? ''
+  const iniciais = email.slice(0, 2).toUpperCase() || 'AD'
+
+  async function handleLogout() {
+    setSaindo(true)
+    try {
+      await logoutAdmin()
+      navigate('/', { replace: true })
+    } finally {
+      setSaindo(false)
+    }
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900">
@@ -37,7 +55,8 @@ export function LayoutPainel({ children }) {
           <div className="ml-auto flex items-center gap-3">
             <button type="button" className="relative rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:bg-slate-50" aria-label="Notificações"><BellIcon className="h-5 w-5"/><span className="absolute right-2 top-2 h-2 w-2 rounded-full border-2 border-white bg-red-500"/></button>
             <div className="h-8 w-px bg-slate-200" />
-            <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 font-bold text-emerald-700">AD</div><div className="hidden sm:block"><p className="text-sm font-semibold text-slate-800">Administrador</p><p className="text-xs text-slate-400">Gestão iFácil</p></div></div>
+            <div className="flex items-center gap-3"><div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 font-bold text-emerald-700">{iniciais}</div><div className="hidden sm:block"><p className="text-sm font-semibold text-slate-800">Administrador</p><p className="max-w-44 truncate text-xs text-slate-400">{email || 'Gestão iFácil'}</p></div></div>
+            <button type="button" onClick={handleLogout} disabled={saindo} className="rounded-xl border border-slate-200 p-2.5 text-slate-500 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50" aria-label="Sair do painel" title="Sair do painel"><LogoutIcon className="h-5 w-5" /></button>
           </div>
         </header>
         <main className="p-4 sm:p-7 lg:p-8">{children}</main>

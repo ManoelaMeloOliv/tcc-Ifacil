@@ -1,35 +1,47 @@
 import { supabase } from '../lib/supabaseClient'
 
-const CHAVE_SESSAO = 'ifacil_admin'
+/**
+ * Autenticação via Supabase Auth.
+ *
+ * A sessão é guardada pelo próprio client (localStorage) e enviada como JWT em
+ * toda requisição ao banco. É esse token que as policies de RLS enxergam — por
+ * isso o login aqui protege os dados de verdade, e não só a navegação.
+ */
 
 export async function loginAdmin(email, senha) {
-  const { data, error } = await supabase.rpc('verificar_login_admin', {
-    p_email: email,
-    p_senha: senha,
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password: senha,
   })
 
-  if (error) throw error
-
-  // Se a RPC retornar array ou objeto único
-  const admin = Array.isArray(data) ? data[0] : data
-  if (!admin) throw new Error('E-mail ou senha inválidos.')
-
-  sessionStorage.setItem(CHAVE_SESSAO, JSON.stringify(admin))
-  return admin
-}
-
-export function logoutAdmin() {
-  sessionStorage.removeItem(CHAVE_SESSAO)
-}
-
-export function getAdminLogado() {
-  const bruto = sessionStorage.getItem(CHAVE_SESSAO)
-  if (!bruto) return null
-
-  try {
-    return JSON.parse(bruto)
-  } catch {
-    sessionStorage.removeItem(CHAVE_SESSAO)
-    return null
+  if (error) {
+    if (error.message.includes('Invalid login credentials')) {
+      throw new Error('E-mail ou senha inválidos.')
+    }
+    if (error.message.includes('Email not confirmed')) {
+      throw new Error('E-mail ainda não confirmado. Confira sua caixa de entrada.')
+    }
+    throw new Error(error.message)
   }
+
+  return data.user
+}
+
+export async function logoutAdmin() {
+  const { error } = await supabase.auth.signOut()
+  if (error) throw error
+}
+
+export async function getSessaoAtual() {
+  const { data, error } = await supabase.auth.getSession()
+  if (error) return null
+  return data.session
+}
+
+/** Registra um listener de login/logout. Devolve a função para cancelar. */
+export function onMudancaAuth(callback) {
+  const { data } = supabase.auth.onAuthStateChange((_evento, sessao) => {
+    callback(sessao)
+  })
+  return () => data.subscription.unsubscribe()
 }

@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { PaginaLogin } from './paginas/PaginaLogin'
+import { RotaProtegida, RotaPublica } from './componentes/autenticacao/RotaProtegida'
 
 const PaginaPainel = lazy(() =>
   import('./paginas/PaginaPainel').then((module) => ({
@@ -31,33 +32,49 @@ function PageLoading() {
   )
 }
 
+/** Envolve as páginas do painel: exige sessão e mostra o loading do lazy import. */
+function PaginaProtegida({ children }) {
+  return (
+    <RotaProtegida>
+      <Suspense fallback={<PageLoading />}>{children}</Suspense>
+    </RotaProtegida>
+  )
+}
+
 function Aplicacao() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<PaginaLogin />} />
+        <Route
+          path="/"
+          element={
+            <RotaPublica>
+              <PaginaLogin />
+            </RotaPublica>
+          }
+        />
         <Route
           path="/painel"
           element={
-            <Suspense fallback={<PageLoading />}>
+            <PaginaProtegida>
               <PaginaPainel />
-            </Suspense>
+            </PaginaProtegida>
           }
         />
         <Route
           path="/painel/perguntas"
           element={
-            <Suspense fallback={<PageLoading />}>
+            <PaginaProtegida>
               <PaginaPerguntas />
-            </Suspense>
+            </PaginaProtegida>
           }
         />
         <Route
           path="/painel/historico"
           element={
-            <Suspense fallback={<PageLoading />}>
+            <PaginaProtegida>
               <PaginaHistorico />
-            </Suspense>
+            </PaginaProtegida>
           }
         />
         <Route path="/dashboard" element={<Navigate to="/painel" replace />} />

@@ -154,3 +154,13 @@ export function CalendarIcon(props) {
     </IconBase>
   );
 }
+
+export function LogoutIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3" {...strokeProps} />
+      <path d="m15 16 4-4-4-4" {...strokeProps} />
+      <path d="M19 12H9" {...strokeProps} />
+    </IconBase>
+  );
+}
