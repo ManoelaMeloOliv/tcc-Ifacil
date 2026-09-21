@@ -72,6 +72,14 @@ services:
 
 volumes:
   postgres_data:
+    external: true
+    name: aifacil_postgres_data
   redis_data:
+    external: true
+    name: aifacil_redis_data
   n8n_data:
+    external: true
+    name: aifacil_n8n_data
   evolution_instances:
+    external: true
+    name: aifacil_evolution_instances
