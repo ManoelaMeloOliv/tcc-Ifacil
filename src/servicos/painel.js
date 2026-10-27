@@ -6,6 +6,7 @@ const NOMES_MES_COMPLETO = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ]
 
+// A view já devolve os últimos 12 meses, inclusive os zerados
 export async function getEstatisticasMensais() {
   const { data, error } = await supabase
     .from('vw_estatisticas_mensais')
@@ -15,15 +16,15 @@ export async function getEstatisticasMensais() {
   if (error) throw error
 
   return (data ?? []).map((linha) => {
-    // Adiciona T00:00:00 para evitar que o Date parseie em UTC e volte 1 dia no fuso GMT-3
-    const dataMes = new Date(`${linha.mes}T00:00:00`)
-    const indexMes = isNaN(dataMes.getMonth()) ? 0 : dataMes.getMonth()
+    // 'YYYY-MM-DD': lê o mês direto do texto para não cair no mês anterior por causa do fuso
+    const indexMes = Number(linha.mes.slice(5, 7)) - 1
 
     return {
-      mes: NOMES_MES[indexMes],
+      month: NOMES_MES[indexMes],
       fullMonth: NOMES_MES_COMPLETO[indexMes],
       anoMes: linha.mes,
       contacts: linha.total_contatos ?? 0,
+      services: linha.total_atendimentos ?? 0,
       resolved: linha.total_resolvidos ?? 0,
       questions: linha.total_perguntas ?? 0,
       responseTime: Number(linha.tempo_resposta_medio_seg ?? 0),
@@ -33,42 +34,33 @@ export async function getEstatisticasMensais() {
 
 export async function getDistribuicaoTemas(anoMes) {
   if (!anoMes) return []
-  
-  const [ano, mes] = anoMes.split('-').map(Number)
-  const inicio = new Date(Date.UTC(ano, mes - 1, 1))
-  const fim = new Date(Date.UTC(ano, mes, 1))
 
   const { data, error } = await supabase
-    .from('conversas')
-    .select('categoria_id, categorias(nome, cor)')
-    .gte('iniciada_em', inicio.toISOString())
-    .lt('iniciada_em', fim.toISOString())
+    .from('vw_temas_mensais')
+    .select('tema, cor, total')
+    .eq('mes', anoMes)
 
   if (error) throw error
 
-  const contagem = new Map()
-  for (const linha of data ?? []) {
-    const nome = linha.categorias?.nome ?? 'Outros'
-    const atual = contagem.get(nome) ?? { name: nome, color: linha.categorias?.cor ?? '#cbd5e1', total: 0 }
-    atual.total += 1
-    contagem.set(nome, atual)
-  }
+  const totalGeral = (data ?? []).reduce((soma, linha) => soma + linha.total, 0)
 
-  const totalGeral = [...contagem.values()].reduce((soma, item) => soma + item.total, 0)
-
-  return [...contagem.values()]
-    .map((item) => ({
-      name: item.name,
-      color: item.color,
-      value: totalGeral ? Math.round((item.total / totalGeral) * 100) : 0,
+  return (data ?? [])
+    .map((linha) => ({
+      name: linha.tema,
+      color: linha.cor,
+      value: totalGeral ? Math.round((linha.total / totalGeral) * 100) : 0,
     }))
     .sort((a, b) => b.value - a.value)
 }
 
-export async function getPerguntasFrequentes(limite = 3) {
+export async function getPerguntasFrequentes(anoMes, limite = 3) {
+  if (!anoMes) return []
+
   const { data, error } = await supabase
     .from('vw_perguntas_frequentes')
     .select('*')
+    .eq('mes', anoMes)
+    .order('vezes_utilizada', { ascending: false })
     .limit(limite)
 
   if (error) throw error

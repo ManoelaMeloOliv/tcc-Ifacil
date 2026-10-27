@@ -1,15 +1,8 @@
 import { useEffect, useState } from 'react'
-import { categories } from '../../dados/dadosPerguntas'
 import { CloseIcon } from './IconesPainel'
 
-const emptyAnswer = { question: '', answer: '', categoryId: categories[0].id, active: true }
-
-export function ModalResposta({ answer, onSave, onClose }) {
-  const [form, setForm] = useState(emptyAnswer)
-
-  useEffect(() => {
-    setForm(answer ? { ...answer } : emptyAnswer)
-  }, [answer])
+export function ModalResposta({ answer, categories, saving, onSave, onClose }) {
+  const [form, setForm] = useState(() => answer ?? { question: '', answer: '', categoryId: categories[0]?.id ?? '', active: true })
 
   useEffect(() => {
     function handleEscape(event) {
@@ -74,10 +67,11 @@ export function ModalResposta({ answer, onSave, onClose }) {
               <label htmlFor="categoria" className="mb-2 block text-sm font-semibold text-slate-700">Categoria</label>
               <select
                 id="categoria"
-                value={form.categoryId}
-                onChange={(event) => updateField('categoryId', Number(event.target.value))}
+                value={form.categoryId ?? ''}
+                onChange={(event) => updateField('categoryId', event.target.value)}
                 className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
               >
+                <option value="">Sem categoria</option>
                 {categories.map((category) => (
                   <option key={category.id} value={category.id}>{category.name}</option>
                 ))}
@@ -99,7 +93,7 @@ export function ModalResposta({ answer, onSave, onClose }) {
 
           <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:justify-end">
             <button type="button" onClick={onClose} className="rounded-xl border border-slate-200 px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">Cancelar</button>
-            <button type="submit" className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">Salvar resposta</button>
+            <button type="submit" disabled={saving} className="rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-wait disabled:opacity-60">{saving ? 'Salvando...' : 'Salvar resposta'}</button>
           </div>
         </form>
       </div>

@@ -4,6 +4,7 @@ export function DistribuicaoTemas({ topics, monthName }) {
     <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
       <h2 className="font-bold text-slate-900">Distribuição por tema</h2>
       <p className="mt-1 text-sm text-slate-500">Assuntos mais procurados em {monthName}</p>
+      {topics.length === 0 ? <p className="py-16 text-center text-sm text-slate-400">Nenhum atendimento neste mês.</p> : <>
       <div className="relative mx-auto mt-4 h-52 max-w-xs">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
@@ -25,6 +26,7 @@ export function DistribuicaoTemas({ topics, monthName }) {
           </div>
         ))}
       </div>
+      </>}
     </article>
   )
 }

@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react'
+import { AvisoConsulta } from '../componentes/interface/AvisoConsulta'
+import { useConsulta } from '../componentes/interface/useConsulta'
 import { CalendarIcon, ChatIcon, SearchIcon } from '../componentes/painel/IconesPainel'
 import { LayoutPainel } from '../componentes/painel/LayoutPainel'
-import { formatServiceDate, serviceHistory, serviceStatus } from '../dados/dadosHistorico'
+import { formatServiceDate, getHistoricoAtendimentos, serviceStatus } from '../servicos/historico'
 
 const avatarColors = [
   'bg-emerald-100 text-emerald-700',
@@ -12,12 +14,13 @@ const avatarColors = [
 
 const statusFilters = [
   { value: 'all', label: 'Todos' },
-  { value: 'resolved', label: 'Resolvidos' },
-  { value: 'forwarded', label: 'Encaminhados' },
-  { value: 'ongoing', label: 'Em andamento' },
+  { value: 'resolvida', label: 'Resolvidos' },
+  { value: 'encaminhada', label: 'Encaminhados' },
+  { value: 'em_andamento', label: 'Em andamento' },
 ]
 
 export function PaginaHistorico() {
+  const { dados: serviceHistory, carregando, erro, recarregar } = useConsulta(getHistoricoAtendimentos, [])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
@@ -32,10 +35,10 @@ export function PaginaHistorico() {
         || item.lastMessage.toLowerCase().includes(term)
       return matchesStatus && matchesSearch
     })
-  }, [search, statusFilter])
+  }, [serviceHistory, search, statusFilter])
 
-  const forwardedCount = serviceHistory.filter((item) => item.status === 'forwarded').length
-  const ongoingCount = serviceHistory.filter((item) => item.status === 'ongoing').length
+  const forwardedCount = serviceHistory.filter((item) => item.status === 'encaminhada').length
+  const ongoingCount = serviceHistory.filter((item) => item.status === 'em_andamento').length
 
   return (
     <LayoutPainel>
@@ -56,6 +59,7 @@ export function PaginaHistorico() {
         </div>
       </div>
 
+      <AvisoConsulta carregando={carregando} erro={erro} onTentarNovamente={recarregar}>
       <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center">
           <div className="relative flex-1">
@@ -125,6 +129,7 @@ export function PaginaHistorico() {
           {visibleServices.length} de {serviceHistory.length} atendimentos
         </div>
       </section>
+      </AvisoConsulta>
     </LayoutPainel>
   )
 }

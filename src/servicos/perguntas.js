@@ -1,5 +1,21 @@
 import { supabase } from '../lib/supabaseClient'
 
+// Converte as linhas do banco para o formato usado pelas telas
+function paraResposta(linha) {
+  return {
+    id: linha.id,
+    question: linha.pergunta,
+    answer: linha.resposta,
+    categoryId: linha.categoria_id,
+    active: linha.ativo,
+    updatedAt: linha.atualizado_em,
+  }
+}
+
+function paraLinha({ question, answer, categoryId, active }) {
+  return { pergunta: question, resposta: answer, categoria_id: categoryId || null, ativo: active }
+}
+
 export async function getCategorias() {
   const { data, error } = await supabase
     .from('categorias')
@@ -7,7 +23,7 @@ export async function getCategorias() {
     .order('nome')
 
   if (error) throw error
-  return data ?? []
+  return (data ?? []).map((linha) => ({ id: linha.id, name: linha.nome, color: linha.slug_cor }))
 }
 
 export async function getRespostasPadrao() {
@@ -17,30 +33,30 @@ export async function getRespostasPadrao() {
     .order('atualizado_em', { ascending: false })
 
   if (error) throw error
-  return data ?? []
+  return (data ?? []).map(paraResposta)
 }
 
-export async function criarRespostaPadrao({ pergunta, resposta, categoria_id, ativo }) {
+export async function criarRespostaPadrao(resposta) {
   const { data, error } = await supabase
     .from('respostas_padrao')
-    .insert({ pergunta, resposta, categoria_id, ativo })
+    .insert(paraLinha(resposta))
     .select()
     .single()
 
   if (error) throw error
-  return data
+  return paraResposta(data)
 }
 
-export async function atualizarRespostaPadrao(id, { pergunta, resposta, categoria_id, ativo }) {
+export async function atualizarRespostaPadrao(id, resposta) {
   const { data, error } = await supabase
     .from('respostas_padrao')
-    .update({ pergunta, resposta, categoria_id, ativo, atualizado_em: new Date().toISOString() })
+    .update({ ...paraLinha(resposta), atualizado_em: new Date().toISOString() })
     .eq('id', id)
     .select()
     .single()
 
   if (error) throw error
-  return data
+  return paraResposta(data)
 }
 
 export async function excluirRespostaPadrao(id) {

@@ -39,10 +39,13 @@ const [emailAdmin, senhaAdmin] = process.argv.slice(2)
 
 const OBJETOS = [
   'categorias',
+  'contatos',
   'conversas',
+  'mensagens',
   'respostas_padrao',
   'vw_historico_atendimentos',
   'vw_estatisticas_mensais',
+  'vw_temas_mensais',
   'vw_perguntas_frequentes',
   'vw_resumo_dashboard',
   'vw_respostas_padrao',

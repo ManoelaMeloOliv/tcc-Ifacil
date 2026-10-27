@@ -1,16 +1,33 @@
 import { useMemo, useState } from 'react'
+import { AvisoConsulta } from '../componentes/interface/AvisoConsulta'
+import { useConsulta } from '../componentes/interface/useConsulta'
 import { EtiquetaCategoria } from '../componentes/painel/EtiquetaCategoria'
 import { PencilIcon, PlusIcon, SearchIcon, TrashIcon } from '../componentes/painel/IconesPainel'
 import { LayoutPainel } from '../componentes/painel/LayoutPainel'
 import { ModalResposta } from '../componentes/painel/ModalResposta'
-import { categories, getCategory, standardAnswers } from '../dados/dadosPerguntas'
+import {
+  atualizarRespostaPadrao,
+  criarRespostaPadrao,
+  excluirRespostaPadrao,
+  getCategorias,
+  getRespostasPadrao,
+} from '../servicos/perguntas'
+
+const semCategoria = { id: null, name: 'Sem categoria', color: 'slate' }
 
 export function PaginaPerguntas() {
-  const [answers, setAnswers] = useState(standardAnswers)
+  const respostas = useConsulta(getRespostasPadrao, [])
+  const categorias = useConsulta(getCategorias, [])
+  const categories = categorias.dados
+  // Cópia local para refletir criação/edição/exclusão sem buscar tudo de novo
+  const [alteradas, setAlteradas] = useState(null)
+  const answers = alteradas ?? respostas.dados
   const [search, setSearch] = useState('')
   const [categoryFilter, setCategoryFilter] = useState('all')
   const [editing, setEditing] = useState(null)
   const [modalOpen, setModalOpen] = useState(false)
+  const [salvando, setSalvando] = useState(false)
+  const [erroAcao, setErroAcao] = useState(null)
 
   const visibleAnswers = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -22,6 +39,10 @@ export function PaginaPerguntas() {
     })
   }, [answers, search, categoryFilter])
 
+  function getCategory(categoryId) {
+    return categories.find((category) => category.id === categoryId) ?? semCategoria
+  }
+
   function openCreate() {
     setEditing(null)
     setModalOpen(true)
@@ -32,22 +53,44 @@ export function PaginaPerguntas() {
     setModalOpen(true)
   }
 
-  function handleSave(form) {
-    const updatedAt = new Date().toISOString()
-
-    setAnswers((current) => (
-      form.id
-        ? current.map((item) => (item.id === form.id ? { ...form, updatedAt } : item))
-        : [{ ...form, id: Math.max(0, ...current.map((item) => item.id)) + 1, updatedAt }, ...current]
-    ))
-
+  function closeModal() {
     setModalOpen(false)
     setEditing(null)
   }
 
-  function handleDelete(answer) {
+  async function handleSave(form) {
+    setSalvando(true)
+    setErroAcao(null)
+
+    try {
+      const salva = form.id ? await atualizarRespostaPadrao(form.id, form) : await criarRespostaPadrao(form)
+      setAlteradas(form.id
+        ? answers.map((item) => (item.id === salva.id ? salva : item))
+        : [salva, ...answers])
+      closeModal()
+    } catch (falha) {
+      setErroAcao(`Não foi possível salvar: ${falha.message}`)
+    } finally {
+      setSalvando(false)
+    }
+  }
+
+  async function handleDelete(answer) {
     if (!window.confirm(`Excluir a resposta "${answer.question}"?`)) return
-    setAnswers((current) => current.filter((item) => item.id !== answer.id))
+    setErroAcao(null)
+
+    try {
+      await excluirRespostaPadrao(answer.id)
+      setAlteradas(answers.filter((item) => item.id !== answer.id))
+    } catch (falha) {
+      setErroAcao(`Não foi possível excluir: ${falha.message}`)
+    }
+  }
+
+  function recarregar() {
+    setAlteradas(null)
+    respostas.recarregar()
+    categorias.recarregar()
   }
 
   return (
@@ -58,11 +101,16 @@ export function PaginaPerguntas() {
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Perguntas & Respostas</h1>
           <p className="mt-2 text-sm text-slate-500">Gerencie as respostas padrão para as dúvidas frequentes.</p>
         </div>
-        <button type="button" onClick={openCreate} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700">
+        <button type="button" onClick={openCreate} disabled={categorias.carregando || !!categorias.erro} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
           <PlusIcon className="h-4 w-4" />Nova resposta
         </button>
       </div>
 
+      {erroAcao && (
+        <p role="alert" className="mb-4 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-700">{erroAcao}</p>
+      )}
+
+      <AvisoConsulta carregando={respostas.carregando || categorias.carregando} erro={respostas.erro ?? categorias.erro} onTentarNovamente={recarregar}>
       <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
         <div className="flex flex-col gap-4 border-b border-slate-100 p-5 lg:flex-row lg:items-center">
           <div className="relative flex-1">
@@ -126,8 +174,9 @@ export function PaginaPerguntas() {
           {visibleAnswers.length} de {answers.length} respostas cadastradas
         </div>
       </section>
+      </AvisoConsulta>
 
-      {modalOpen && <ModalResposta answer={editing} onSave={handleSave} onClose={() => { setModalOpen(false); setEditing(null) }} />}
+      {modalOpen && <ModalResposta answer={editing} categories={categories} saving={salvando} onSave={handleSave} onClose={closeModal} />}
     </LayoutPainel>
   )
 }

@@ -1,19 +1,37 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useState } from 'react'
+import { AvisoConsulta } from '../componentes/interface/AvisoConsulta'
+import { useConsulta } from '../componentes/interface/useConsulta'
 import { CartaoMetrica } from '../componentes/painel/CartaoMetrica'
 import { DistribuicaoTemas } from '../componentes/painel/DistribuicaoTemas'
 import { GraficoContatos } from '../componentes/painel/GraficoContatos'
 import { CheckCircleIcon, ChatIcon, ClockIcon, QuestionIcon } from '../componentes/painel/IconesPainel'
 import { LayoutPainel } from '../componentes/painel/LayoutPainel'
 import { PerguntasFrequentes } from '../componentes/painel/PerguntasFrequentes'
-import { getQuestionsForMonth, getTopicsForMonth, monthlyContacts } from '../dados/dadosPainel'
+import { getDistribuicaoTemas, getEstatisticasMensais, getPerguntasFrequentes } from '../servicos/painel'
 
 const numberFormatter = new Intl.NumberFormat('pt-BR')
 
 export function PaginaPainel() {
-  const [selectedMonth, setSelectedMonth] = useState(monthlyContacts.at(-1))
-  const topics = useMemo(() => getTopicsForMonth(selectedMonth), [selectedMonth])
-  const questions = useMemo(() => getQuestionsForMonth(selectedMonth), [selectedMonth])
-  const resolutionRate = (selectedMonth.resolved / selectedMonth.contacts) * 100
+  const estatisticas = useConsulta(getEstatisticasMensais, [])
+  const months = estatisticas.dados
+  const [selectedKey, setSelectedKey] = useState(null)
+  const selectedMonth = months.find((item) => item.anoMes === selectedKey) ?? months.at(-1)
+  const anoMes = selectedMonth?.anoMes
+
+  const topics = useConsulta(useCallback(() => getDistribuicaoTemas(anoMes), [anoMes]), [])
+  const questions = useConsulta(useCallback(() => getPerguntasFrequentes(anoMes), [anoMes]), [])
+
+  if (!selectedMonth) {
+    return (
+      <LayoutPainel>
+        <AvisoConsulta carregando={estatisticas.carregando} erro={estatisticas.erro} onTentarNovamente={estatisticas.recarregar}>
+          <p className="py-12 text-center text-sm text-slate-400">Ainda não há atendimentos registrados.</p>
+        </AvisoConsulta>
+      </LayoutPainel>
+    )
+  }
+
+  const resolutionRate = selectedMonth.services ? (selectedMonth.resolved / selectedMonth.services) * 100 : 0
 
   return (
     <LayoutPainel>
@@ -24,18 +42,22 @@ export function PaginaPainel() {
 
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores principais">
         <CartaoMetrica title={`Perguntas em ${selectedMonth.month}`} value={numberFormatter.format(selectedMonth.questions)} detail="Perguntas recebidas durante o mês" icon={QuestionIcon} />
-        <CartaoMetrica title={`Atendimentos em ${selectedMonth.month}`} value={numberFormatter.format(selectedMonth.contacts)} detail="Pessoas que entraram em contato" icon={ChatIcon} accent="slate" />
+        <CartaoMetrica title={`Atendimentos em ${selectedMonth.month}`} value={numberFormatter.format(selectedMonth.services)} detail={`${numberFormatter.format(selectedMonth.contacts)} pessoas entraram em contato`} icon={ChatIcon} accent="slate" />
         <CartaoMetrica title="Resolvidos pelo bot" value={numberFormatter.format(selectedMonth.resolved)} detail={`${resolutionRate.toFixed(1).replace('.', ',')}% sem atendimento humano`} icon={CheckCircleIcon} />
         <CartaoMetrica title="Tempo de resposta" value={`${selectedMonth.responseTime.toFixed(1).replace('.', ',')}s`} detail={`Média de resposta em ${selectedMonth.fullMonth}`} icon={ClockIcon} accent="red" />
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,0.8fr)]">
-        <GraficoContatos selectedMonth={selectedMonth} onSelectMonth={setSelectedMonth} />
-        <DistribuicaoTemas topics={topics} monthName={selectedMonth.fullMonth} />
+        <GraficoContatos months={months} selectedMonth={selectedMonth} onSelectMonth={(item) => setSelectedKey(item.anoMes)} />
+        <AvisoConsulta carregando={topics.carregando} erro={topics.erro} onTentarNovamente={topics.recarregar}>
+          <DistribuicaoTemas topics={topics.dados} monthName={selectedMonth.fullMonth} />
+        </AvisoConsulta>
       </section>
 
       <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]">
-        <PerguntasFrequentes questions={questions} monthName={selectedMonth.fullMonth} />
+        <AvisoConsulta carregando={questions.carregando} erro={questions.erro} onTentarNovamente={questions.recarregar}>
+          <PerguntasFrequentes questions={questions.dados} monthName={selectedMonth.fullMonth} />
+        </AvisoConsulta>
         <article className="relative overflow-hidden rounded-2xl bg-emerald-900 p-6 text-white shadow-sm">
           <div className="absolute -bottom-20 -right-20 h-56 w-56 rounded-full border-[40px] border-emerald-700/40" />
           <p className="relative text-sm font-semibold text-emerald-200">Eficiência do iFácil</p>

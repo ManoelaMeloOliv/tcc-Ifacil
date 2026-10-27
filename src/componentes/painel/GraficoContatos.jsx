@@ -1,9 +1,8 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts'
-import { monthlyContacts } from '../../dados/dadosPainel'
 
 const numberFormatter = new Intl.NumberFormat('pt-BR')
 
-export function GraficoContatos({ selectedMonth, onSelectMonth }) {
+export function GraficoContatos({ months, selectedMonth, onSelectMonth }) {
   function selectMonth(barData) {
     if (barData?.payload) {
       onSelectMonth(barData.payload)
@@ -22,10 +21,10 @@ export function GraficoContatos({ selectedMonth, onSelectMonth }) {
 
       <div className="mt-6 h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={monthlyContacts} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
+          <BarChart data={months} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
             <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />
             <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+            <YAxis axisLine={false} tickLine={false} allowDecimals={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
             <Bar
               dataKey="contacts"
               radius={[7, 7, 2, 2]}
@@ -35,10 +34,10 @@ export function GraficoContatos({ selectedMonth, onSelectMonth }) {
               isAnimationActive={false}
               onClick={selectMonth}
             >
-              {monthlyContacts.map((item) => (
+              {months.map((item) => (
                 <Cell
-                  key={item.month}
-                  fill={item.month === selectedMonth.month ? '#dc2626' : '#059669'}
+                  key={item.anoMes}
+                  fill={item.anoMes === selectedMonth.anoMes ? '#dc2626' : '#059669'}
                 />
               ))}
             </Bar>

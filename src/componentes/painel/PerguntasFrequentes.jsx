@@ -11,10 +11,10 @@ export function PerguntasFrequentes({ questions, monthName }) {
         {questions.map((item) => (
           <div key={item.position} className="flex items-center gap-4 py-4 first:pt-1 last:pb-0">
             <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-sm font-bold ${item.position === 1 ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-600'}`}>{item.position}</span>
-            <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{item.question}</p><p className="mt-1 text-xs text-slate-400">{item.topic} · {numberFormatter.format(item.amount)} perguntas</p></div>
-            <span className="text-xs font-semibold text-emerald-600">{item.trend}</span>
+            <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-slate-800">{item.question}</p><p className="mt-1 text-xs text-slate-400">{item.topic} · {numberFormatter.format(item.amount)} {item.amount === 1 ? 'vez' : 'vezes'}</p></div>
           </div>
         ))}
+        {questions.length === 0 && <p className="py-8 text-center text-sm text-slate-400">Nenhuma pergunta registrada neste mês.</p>}
       </div>
     </article>
   )
