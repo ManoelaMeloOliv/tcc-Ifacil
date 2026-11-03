@@ -2,8 +2,6 @@ import { useEffect, useState } from 'react'
 import { getSessaoAtual, onMudancaAuth } from '../../servicos/autenticacao'
 
 /**
- * Devolve a sessão atual do Supabase Auth.
- *
  * `carregando` começa true porque a sessão é lida de forma assíncrona: sem isso
  * a tela piscaria de volta pro login a cada F5, antes do token ser restaurado.
  */

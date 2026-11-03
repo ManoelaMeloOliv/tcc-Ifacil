@@ -1,6 +1,5 @@
 import { supabase } from '../lib/supabaseClient'
 
-// Converte as linhas do banco para o formato usado pelas telas
 function paraResposta(linha) {
   return {
     id: linha.id,
@@ -62,4 +61,32 @@ export async function atualizarRespostaPadrao(id, resposta) {
 export async function excluirRespostaPadrao(id) {
   const { error } = await supabase.from('respostas_padrao').delete().eq('id', id)
   if (error) throw error
+}
+
+export async function getMensagensBot() {
+  const { data, error } = await supabase
+    .from('mensagens_bot')
+    .select('chave, titulo, descricao, texto, atualizado_em')
+    .order('ordem')
+
+  if (error) throw error
+  return (data ?? []).map((linha) => ({
+    key: linha.chave,
+    title: linha.titulo,
+    description: linha.descricao ?? '',
+    text: linha.texto,
+    updatedAt: linha.atualizado_em,
+  }))
+}
+
+export async function atualizarMensagemBot(chave, texto) {
+  const { data, error } = await supabase
+    .from('mensagens_bot')
+    .update({ texto, atualizado_em: new Date().toISOString() })
+    .eq('chave', chave)
+    .select('chave, texto, atualizado_em')
+    .single()
+
+  if (error) throw error
+  return { key: data.chave, text: data.texto, updatedAt: data.atualizado_em }
 }

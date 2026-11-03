@@ -1,7 +1,5 @@
--- ============================================================
 -- iFácil — menu de atendimento (AIFÁCIL) e transferência para humano
 -- Idempotente: pode rodar mais de uma vez.
--- ============================================================
 
 -- 1) Estado do atendimento por contato do WhatsApp
 --    Sessão = mensagens com intervalo de até 2 horas (mesma regra das conversas).
@@ -109,7 +107,6 @@ begin
     else 'em_andamento'
   end;
 
-  -- Contato (um por número de WhatsApp)
   insert into contatos (whatsapp, nome, primeira_interacao, ultima_interacao, total_mensagens)
   values (p_telefone, nullif(p_nome, ''), v_recebida, now(), 1)
   on conflict (whatsapp) do update
@@ -118,7 +115,6 @@ begin
         total_mensagens  = coalesce(contatos.total_mensagens, 0) + 1
   returning id into v_contato;
 
-  -- Tema da pergunta por palavras-chave
   select id into v_outros from categorias where nome = 'Outros';
   select id into v_categoria from categorias where nome = case
     when v_texto ~ '(edital|inscri|vaga|sele[cç]|processo seletivo|resultado|classifica)' then 'Editais'

@@ -1,8 +1,6 @@
--- ============================================================
 -- DIAGNÓSTICO DO BANCO — iFácil
--- Cole no Supabase > SQL Editor e rode. Me manda o resultado.
+-- Cole no Supabase > SQL Editor e rode.
 -- Não altera nada, só lê metadados.
--- ============================================================
 
 -- 1) Tabelas e se o RLS está LIGADO em cada uma
 select
@@ -21,7 +19,7 @@ from pg_policies
 where schemaname = 'public'
 order by tablename, policyname;
 
--- 3) Colunas de cada tabela (pra eu conferir os nomes)
+-- 3) Colunas de cada tabela
 select table_name, column_name, data_type, is_nullable
 from information_schema.columns
 where table_schema = 'public'

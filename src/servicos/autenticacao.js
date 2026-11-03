@@ -1,8 +1,6 @@
 import { supabase } from '../lib/supabaseClient'
 
 /**
- * Autenticação via Supabase Auth.
- *
  * A sessão é guardada pelo próprio client (localStorage) e enviada como JWT em
  * toda requisição ao banco. É esse token que as policies de RLS enxergam — por
  * isso o login aqui protege os dados de verdade, e não só a navegação.
@@ -38,7 +36,6 @@ export async function getSessaoAtual() {
   return data.session
 }
 
-/** Registra um listener de login/logout. Devolve a função para cancelar. */
 export function onMudancaAuth(callback) {
   const { data } = supabase.auth.onAuthStateChange((_evento, sessao) => {
     callback(sessao)

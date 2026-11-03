@@ -19,7 +19,6 @@ export function RotaProtegida({ children }) {
   return children
 }
 
-/** Inverso da RotaProtegida: quem já está logado não volta pra tela de login. */
 export function RotaPublica({ children }) {
   const { sessao, carregando } = useSessao()
 

@@ -32,7 +32,6 @@ function PageLoading() {
   )
 }
 
-/** Envolve as páginas do painel: exige sessão e mostra o loading do lazy import. */
 function PaginaProtegida({ children }) {
   return (
     <RotaProtegida>

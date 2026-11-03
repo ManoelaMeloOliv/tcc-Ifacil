@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
 import { AvisoConsulta } from '../componentes/interface/AvisoConsulta'
 import { useConsulta } from '../componentes/interface/useConsulta'
-import { CalendarIcon, ChatIcon, SearchIcon } from '../componentes/painel/IconesPainel'
+import { CalendarIcon, ChatIcon, ChevronRightIcon, SearchIcon, WhatsAppIcon } from '../componentes/painel/IconesPainel'
 import { LayoutPainel } from '../componentes/painel/LayoutPainel'
+import { PainelConversa } from '../componentes/painel/PainelConversa'
 import { formatServiceDate, getHistoricoAtendimentos, serviceStatus } from '../servicos/historico'
 
 const avatarColors = [
@@ -14,15 +15,18 @@ const avatarColors = [
 
 const statusFilters = [
   { value: 'all', label: 'Todos' },
-  { value: 'resolvida', label: 'Resolvidos' },
-  { value: 'encaminhada', label: 'Encaminhados' },
+  { value: 'encaminhada', label: 'Aguardando atendente' },
   { value: 'em_andamento', label: 'Em andamento' },
+  { value: 'resolvida', label: 'Respondidos pelo bot' },
+  { value: 'finalizada', label: 'Finalizados' },
 ]
 
 export function PaginaHistorico() {
   const { dados: serviceHistory, carregando, erro, recarregar } = useConsulta(getHistoricoAtendimentos, [])
   const [search, setSearch] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [selectedId, setSelectedId] = useState(null)
+  const selectedService = serviceHistory.find((item) => item.id === selectedId)
 
   const visibleServices = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -38,7 +42,6 @@ export function PaginaHistorico() {
   }, [serviceHistory, search, statusFilter])
 
   const forwardedCount = serviceHistory.filter((item) => item.status === 'encaminhada').length
-  const ongoingCount = serviceHistory.filter((item) => item.status === 'em_andamento').length
 
   return (
     <LayoutPainel>
@@ -49,10 +52,10 @@ export function PaginaHistorico() {
           <p className="mt-2 text-sm text-slate-500">Conversas realizadas pelo assistente via WhatsApp.</p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <div className="rounded-xl border border-red-100 bg-red-50 px-4 py-2">
+          <button type="button" onClick={() => setStatusFilter('encaminhada')} className="rounded-xl border border-red-100 bg-red-50 px-4 py-2 text-left transition hover:bg-red-100" title="Mostrar só quem aguarda atendente">
             <p className="text-xs text-red-500">Aguardando atendente</p>
-            <p className="text-sm font-bold text-red-700">{forwardedCount + ongoingCount} atendimentos</p>
-          </div>
+            <p className="text-sm font-bold text-red-700">{forwardedCount} {forwardedCount === 1 ? 'atendimento' : 'atendimentos'}</p>
+          </button>
           <button type="button" className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50">
             <CalendarIcon className="h-4 w-4" />Filtrar por data
           </button>
@@ -92,11 +95,12 @@ export function PaginaHistorico() {
                 <th scope="col" className="px-5 py-3.5">Tema</th>
                 <th scope="col" className="px-5 py-3.5">Data</th>
                 <th scope="col" className="px-5 py-3.5">Status</th>
+                <th scope="col" className="px-5 py-3.5 text-right">Ações</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {visibleServices.map((item, index) => (
-                <tr key={item.id} className="transition hover:bg-slate-50/60">
+                <tr key={item.id} onClick={() => setSelectedId(item.id)} className={`cursor-pointer transition ${item.status === 'encaminhada' ? 'bg-red-50/40 hover:bg-red-50/70' : 'hover:bg-slate-50/60'}`}>
                   <td className="px-5 py-4">
                     <div className="flex items-center gap-3">
                       <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-xs font-bold ${avatarColors[index % avatarColors.length]}`}>{item.initials}</span>
@@ -110,7 +114,19 @@ export function PaginaHistorico() {
                   <td className="px-5 py-4"><span className="text-sm text-slate-500">{item.topic}</span></td>
                   <td className="whitespace-nowrap px-5 py-4"><span className="text-sm text-slate-500">{formatServiceDate(item.startedAt)}</span></td>
                   <td className="px-5 py-4">
-                    <span className={`inline-flex rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${serviceStatus[item.status].className}`}>{serviceStatus[item.status].label}</span>
+                    <span className={`inline-flex whitespace-nowrap rounded-full px-2.5 py-1 text-xs font-semibold ring-1 ring-inset ${serviceStatus[item.status].className}`}>{serviceStatus[item.status].label}</span>
+                  </td>
+                  <td className="px-5 py-4">
+                    <div className="flex items-center justify-end gap-1">
+                      {item.whatsappLink && (
+                        <a href={item.whatsappLink} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()} className={`rounded-lg p-2 transition ${item.status === 'encaminhada' ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'text-slate-400 hover:bg-slate-100 hover:text-emerald-700'}`} aria-label={`Abrir conversa com ${item.name} no WhatsApp`} title="Abrir no WhatsApp">
+                          <WhatsAppIcon className="h-4 w-4" />
+                        </a>
+                      )}
+                      <button type="button" onClick={(event) => { event.stopPropagation(); setSelectedId(item.id) }} className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label={`Ver conversa com ${item.name}`} title="Ver conversa">
+                        <ChevronRightIcon className="h-4 w-4" />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -130,6 +146,15 @@ export function PaginaHistorico() {
         </div>
       </section>
       </AvisoConsulta>
+
+      {selectedService && (
+        <PainelConversa
+          key={selectedService.id}
+          service={selectedService}
+          onClose={() => setSelectedId(null)}
+          onFinalizado={recarregar}
+        />
+      )}
     </LayoutPainel>
   )
 }

@@ -164,3 +164,26 @@ export function LogoutIcon(props) {
     </IconBase>
   );
 }
+
+export function WhatsAppIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path
+        d="M3.5 20.5 5 16.3A8.5 8.5 0 1 1 8.2 19.3L3.5 20.5Z"
+        {...strokeProps}
+      />
+      <path
+        d="M9 8.5c0 3.3 3.2 6.5 6.5 6.5l1-1.6-2-1-1 1c-1.2-.5-2.4-1.7-2.9-2.9l1-1-1-2L9 8.5Z"
+        {...strokeProps}
+      />
+    </IconBase>
+  );
+}
+
+export function ChevronRightIcon(props) {
+  return (
+    <IconBase {...props}>
+      <path d="m9 6 6 6-6 6" {...strokeProps} />
+    </IconBase>
+  );
+}

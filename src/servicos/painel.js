@@ -6,7 +6,6 @@ const NOMES_MES_COMPLETO = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ]
 
-// A view já devolve os últimos 12 meses, inclusive os zerados
 export async function getEstatisticasMensais() {
   const { data, error } = await supabase
     .from('vw_estatisticas_mensais')

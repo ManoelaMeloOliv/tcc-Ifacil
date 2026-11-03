@@ -55,7 +55,6 @@ let falhas = 0
 
 console.log(`\n🔌 ${url}\n`)
 
-// ── Parte 1: visitante sem login NÃO pode ler nada ──────────────
 console.log('🔒 Sem login (papel anon) — o esperado é ser BLOQUEADO:\n')
 {
   const anon = createClient(url, chave)
@@ -72,7 +71,6 @@ console.log('🔒 Sem login (papel anon) — o esperado é ser BLOQUEADO:\n')
   }
 }
 
-// ── Parte 2: admin logado PODE ler ─────────────────────────────
 if (!emailAdmin || !senhaAdmin) {
   console.log('\n⏭️  Parte 2 pulada (login do admin não informado).')
   console.log('   Rode: npm run testar:banco -- admin@escola.com suasenha\n')

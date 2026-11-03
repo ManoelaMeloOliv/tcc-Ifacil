@@ -5,6 +5,7 @@ import { EtiquetaCategoria } from '../componentes/painel/EtiquetaCategoria'
 import { PencilIcon, PlusIcon, SearchIcon, TrashIcon } from '../componentes/painel/IconesPainel'
 import { LayoutPainel } from '../componentes/painel/LayoutPainel'
 import { ModalResposta } from '../componentes/painel/ModalResposta'
+import { SecaoMensagensBot } from '../componentes/painel/SecaoMensagensBot'
 import {
   atualizarRespostaPadrao,
   criarRespostaPadrao,
@@ -99,7 +100,7 @@ export function PaginaPerguntas() {
         <div>
           <p className="text-sm font-semibold text-emerald-700">BASE DE CONHECIMENTO</p>
           <h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Perguntas & Respostas</h1>
-          <p className="mt-2 text-sm text-slate-500">Gerencie as respostas padrão para as dúvidas frequentes.</p>
+          <p className="mt-2 max-w-2xl text-sm text-slate-500">Quando a pergunta do aluno for parecida com uma resposta ativa, o bot envia o texto cadastrado na hora, sem consultar a IA. Se não houver resposta parecida, ele busca nos editais.</p>
         </div>
         <button type="button" onClick={openCreate} disabled={categorias.carregando || !!categorias.erro} className="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
           <PlusIcon className="h-4 w-4" />Nova resposta
@@ -175,6 +176,8 @@ export function PaginaPerguntas() {
         </div>
       </section>
       </AvisoConsulta>
+
+      <SecaoMensagensBot />
 
       {modalOpen && <ModalResposta answer={editing} categories={categories} saving={salvando} onSave={handleSave} onClose={closeModal} />}
     </LayoutPainel>

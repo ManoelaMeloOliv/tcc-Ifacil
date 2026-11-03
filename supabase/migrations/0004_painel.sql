@@ -1,15 +1,11 @@
--- ============================================================
 -- iFácil — tabelas base e views lidas pelo painel web
 -- Idempotente: pode rodar mais de uma vez.
 --
 -- As tabelas usam "create table if not exists": num banco que já as tem,
 -- nada é alterado. As views são recriadas (não guardam dados).
 -- São as tabelas que registrar_atendimento (0002/0003) preenche.
--- ============================================================
 
--- ------------------------------------------------------------
 -- 1) Tabelas
--- ------------------------------------------------------------
 
 -- Temas das perguntas. "cor" alimenta o gráfico (hex) e "slug_cor"
 -- a etiqueta do painel (emerald | amber | red | sky | slate).
@@ -28,7 +24,6 @@ insert into public.categorias (nome, cor, slug_cor) values
   ('Outros',    '#cbd5e1', 'slate')
 on conflict (nome) do nothing;
 
--- Um contato por número de WhatsApp
 create table if not exists public.contatos (
   id                 uuid primary key default gen_random_uuid(),
   whatsapp           text not null unique,
@@ -83,11 +78,9 @@ create table if not exists public.respostas_padrao (
   atualizado_em timestamptz not null default now()
 );
 
--- ------------------------------------------------------------
 -- 2) Views do painel
 --    security_invoker: a view respeita o RLS das tabelas de baixo.
 --    Meses contados no fuso de Brasília.
--- ------------------------------------------------------------
 drop view if exists public.vw_resumo_dashboard;
 drop view if exists public.vw_estatisticas_mensais;
 drop view if exists public.vw_temas_mensais;
@@ -150,7 +143,6 @@ left join conv  using (mes)
 left join msg   using (mes)
 left join tempo using (mes);
 
--- Atendimentos por tema em cada mês
 create view public.vw_temas_mensais with (security_invoker = true) as
 select date_trunc('month', c.iniciada_em at time zone 'America/Sao_Paulo')::date as mes,
        coalesce(cat.nome, 'Outros')  as tema,
@@ -210,10 +202,8 @@ select r.id, r.pergunta, r.resposta, r.categoria_id, r.ativo, r.criado_em, r.atu
 from public.respostas_padrao r
 left join public.categorias cat on cat.id = r.categoria_id;
 
--- ------------------------------------------------------------
 -- 3) Acesso: só admin logado (authenticated). Visitante (anon) não vê nada.
 --    Mesmo modelo de sql/rls_policies.sql.
--- ------------------------------------------------------------
 do $$
 declare t text;
 begin
