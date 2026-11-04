@@ -1,12 +1,6 @@
 import { supabase } from '../lib/supabaseClient'
 
-/**
- * A sessão é guardada pelo próprio client (localStorage) e enviada como JWT em
- * toda requisição ao banco. É esse token que as policies de RLS enxergam — por
- * isso o login aqui protege os dados de verdade, e não só a navegação.
- */
-
-export async function loginAdmin(email, senha) {
+export async function entrarAdmin(email, senha) {
   const { data, error } = await supabase.auth.signInWithPassword({
     email: email.trim(),
     password: senha,
@@ -25,20 +19,20 @@ export async function loginAdmin(email, senha) {
   return data.user
 }
 
-export async function logoutAdmin() {
+export async function sairAdmin() {
   const { error } = await supabase.auth.signOut()
   if (error) throw error
 }
 
-export async function getSessaoAtual() {
+export async function buscarSessaoAtual() {
   const { data, error } = await supabase.auth.getSession()
   if (error) return null
   return data.session
 }
 
-export function onMudancaAuth(callback) {
+export function aoMudarAutenticacao(aoMudar) {
   const { data } = supabase.auth.onAuthStateChange((_evento, sessao) => {
-    callback(sessao)
+    aoMudar(sessao)
   })
   return () => data.subscription.unsubscribe()
 }

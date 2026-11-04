@@ -1,10 +1,3 @@
--- iFácil — mensagens fixas do bot editáveis no painel
--- Idempotente: pode rodar mais de uma vez. Rodar depois da 0006.
---
--- O n8n lê estes textos a cada mensagem (junto com ifacil_rotear).
--- Se uma chave sumir ou ficar vazia, o fluxo usa o texto embutido nele.
--- Rodar de novo não sobrescreve textos já editados pela secretaria.
-
 create table if not exists public.mensagens_bot (
   chave         text primary key,
   ordem         smallint not null default 0,
@@ -44,7 +37,6 @@ Se quiser voltar ao atendimento automático, digite *menu*.$txt$),
    $txt$Desculpe a demora! 🙏 Um *atendente humano* já vai retornar com as informações solicitadas dentro de alguns minutos.$txt$)
 on conflict (chave) do nothing;
 
--- Painel: admin logado lê e edita o texto (não cria nem apaga mensagens)
 alter table public.mensagens_bot enable row level security;
 drop policy if exists admin_le_mensagens on public.mensagens_bot;
 drop policy if exists admin_edita_mensagens on public.mensagens_bot;

@@ -1,4 +1,4 @@
-function IconBase({ children, ...props }) {
+function BaseIcone({ children, ...props }) {
   return (
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true" {...props}>
       {children}
@@ -6,184 +6,199 @@ function IconBase({ children, ...props }) {
   );
 }
 
-const strokeProps = {
+const propsTraco = {
   stroke: "currentColor",
   strokeWidth: 1.8,
   strokeLinecap: "round",
   strokeLinejoin: "round",
 };
 
-export function GridIcon(props) {
+export function IconeGrade(props) {
   return (
-    <IconBase {...props}>
-      <rect x="3" y="3" width="7" height="7" rx="2" {...strokeProps} />
-      <rect x="14" y="3" width="7" height="7" rx="2" {...strokeProps} />
-      <rect x="3" y="14" width="7" height="7" rx="2" {...strokeProps} />
-      <rect x="14" y="14" width="7" height="7" rx="2" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <rect x="3" y="3" width="7" height="7" rx="2" {...propsTraco} />
+      <rect x="14" y="3" width="7" height="7" rx="2" {...propsTraco} />
+      <rect x="3" y="14" width="7" height="7" rx="2" {...propsTraco} />
+      <rect x="14" y="14" width="7" height="7" rx="2" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function ChatIcon(props) {
+export function IconeConversa(props) {
   return (
-    <IconBase {...props}>
+    <BaseIcone {...props}>
       <path
         d="M20 11.5a8 8 0 0 1-8.5 8 9 9 0 0 1-3.7-.9L3 20l1.5-4.3A8 8 0 1 1 20 11.5Z"
-        {...strokeProps}
+        {...propsTraco}
       />
-    </IconBase>
+    </BaseIcone>
   );
 }
-export function UsersIcon(props) {
+export function IconeUsuarios(props) {
   return (
-    <IconBase {...props}>
+    <BaseIcone {...props}>
       <path
         d="M16 20v-1.7a4.3 4.3 0 0 0-4.3-4.3H7.3A4.3 4.3 0 0 0 3 18.3V20M9.5 10a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM17 4.5a4 4 0 0 1 0 7.2M21 20v-1.7a4.3 4.3 0 0 0-3-4.1"
-        {...strokeProps}
+        {...propsTraco}
       />
-    </IconBase>
+    </BaseIcone>
   );
 }
-export function ClockIcon(props) {
+export function IconeRelogio(props) {
   return (
-    <IconBase {...props}>
-      <circle cx="12" cy="12" r="9" {...strokeProps} />
-      <path d="M12 7v5l3 2" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <circle cx="12" cy="12" r="9" {...propsTraco} />
+      <path d="M12 7v5l3 2" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function CheckCircleIcon(props) {
+export function IconeConfirmado(props) {
   return (
-    <IconBase {...props}>
-      <circle cx="12" cy="12" r="9" {...strokeProps} />
-      <path d="m8 12 2.5 2.5L16 9" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <circle cx="12" cy="12" r="9" {...propsTraco} />
+      <path d="m8 12 2.5 2.5L16 9" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function QuestionIcon(props) {
+export function IconePergunta(props) {
   return (
-    <IconBase {...props}>
-      <circle cx="12" cy="12" r="9" {...strokeProps} />
+    <BaseIcone {...props}>
+      <circle cx="12" cy="12" r="9" {...propsTraco} />
       <path
         d="M9.8 9a2.4 2.4 0 1 1 3.3 2.2c-.7.3-1.1.8-1.1 1.6v.2M12 17h.01"
-        {...strokeProps}
+        {...propsTraco}
       />
-    </IconBase>
+    </BaseIcone>
   );
 }
-export function MenuIcon(props) {
+export function IconeMenu(props) {
   return (
-    <IconBase {...props}>
-      <path d="M4 7h16M4 12h16M4 17h16" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <path d="M4 7h16M4 12h16M4 17h16" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function BellIcon(props) {
+export function IconeSino(props) {
   return (
-    <IconBase {...props}>
+    <BaseIcone {...props}>
       <path
         d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9ZM14 20h-4"
-        {...strokeProps}
+        {...propsTraco}
       />
-    </IconBase>
+    </BaseIcone>
   );
 }
-export function SettingsIcon(props) {
+export function IconeConfiguracoes(props) {
   return (
-    <IconBase {...props}>
-      <circle cx="12" cy="12" r="3" {...strokeProps} />
+    <BaseIcone {...props}>
+      <circle cx="12" cy="12" r="3" {...propsTraco} />
       <path
         d="M19.4 15a1.7 1.7 0 0 0 .3 1.9l.1.1-2.8 2.8-.1-.1a1.7 1.7 0 0 0-1.9-.3 1.7 1.7 0 0 0-1 1.6v.2h-4V21a1.7 1.7 0 0 0-1-1.6 1.7 1.7 0 0 0-1.9.3l-.1.1L4.2 17l.1-.1a1.7 1.7 0 0 0 .3-1.9A1.7 1.7 0 0 0 3 14H2.8v-4H3a1.7 1.7 0 0 0 1.6-1 1.7 1.7 0 0 0-.3-1.9L4.2 7 7 4.2l.1.1A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1-1.6v-.2h4V3a1.7 1.7 0 0 0 1 1.6 1.7 1.7 0 0 0 1.9-.3l.1-.1L19.8 7l-.1.1a1.7 1.7 0 0 0-.3 1.9 1.7 1.7 0 0 0 1.6 1h.2v4H21a1.7 1.7 0 0 0-1.6 1Z"
-        {...strokeProps}
+        {...propsTraco}
       />
-    </IconBase>
+    </BaseIcone>
   );
 }
-export function SearchIcon(props) {
+export function IconeBusca(props) {
   return (
-    <IconBase {...props}>
-      <circle cx="11" cy="11" r="7" {...strokeProps} />
-      <path d="m20 20-3.5-3.5" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <circle cx="11" cy="11" r="7" {...propsTraco} />
+      <path d="m20 20-3.5-3.5" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function PlusIcon(props) {
+export function IconeSetaCima(props) {
   return (
-    <IconBase {...props}>
-      <path d="M12 5v14M5 12h14" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <path d="M12 19V5M5 12l7-7 7 7" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function PencilIcon(props) {
+export function IconeSetaBaixo(props) {
   return (
-    <IconBase {...props}>
-      <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3Z" {...strokeProps} />
-      <path d="m14.5 6.5 3 3" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <path d="M12 5v14M19 12l-7 7-7-7" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function TrashIcon(props) {
+
+export function IconeMais(props) {
   return (
-    <IconBase {...props}>
+    <BaseIcone {...props}>
+      <path d="M12 5v14M5 12h14" {...propsTraco} />
+    </BaseIcone>
+  );
+}
+export function IconeLapis(props) {
+  return (
+    <BaseIcone {...props}>
+      <path d="M4 20h4L19 9a2.1 2.1 0 0 0-3-3L5 17v3Z" {...propsTraco} />
+      <path d="m14.5 6.5 3 3" {...propsTraco} />
+    </BaseIcone>
+  );
+}
+export function IconeLixeira(props) {
+  return (
+    <BaseIcone {...props}>
       <path
         d="M4 7h16M10 4h4M6 7l1 13h10l1-13M10 11v5M14 11v5"
-        {...strokeProps}
+        {...propsTraco}
       />
-    </IconBase>
+    </BaseIcone>
   );
 }
-export function HistoryIcon(props) {
+export function IconeHistorico(props) {
   return (
-    <IconBase {...props}>
-      <path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5V9H8" {...strokeProps} />
-      <path d="M12 8v4.2l2.8 1.8" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <path d="M3.5 12a8.5 8.5 0 1 0 2.6-6.1M3.5 4.5V9H8" {...propsTraco} />
+      <path d="M12 8v4.2l2.8 1.8" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function CloseIcon(props) {
+export function IconeFechar(props) {
   return (
-    <IconBase {...props}>
-      <path d="m6 6 12 12M18 6 6 18" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <path d="m6 6 12 12M18 6 6 18" {...propsTraco} />
+    </BaseIcone>
   );
 }
-export function CalendarIcon(props) {
+export function IconeCalendario(props) {
   return (
-    <IconBase {...props}>
-      <rect x="3.5" y="5" width="17" height="16" rx="2.5" {...strokeProps} />
-      <path d="M3.5 10h17M8 3v4M16 3v4" {...strokeProps} />
-    </IconBase>
-  );
-}
-
-export function LogoutIcon(props) {
-  return (
-    <IconBase {...props}>
-      <path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3" {...strokeProps} />
-      <path d="m15 16 4-4-4-4" {...strokeProps} />
-      <path d="M19 12H9" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <rect x="3.5" y="5" width="17" height="16" rx="2.5" {...propsTraco} />
+      <path d="M3.5 10h17M8 3v4M16 3v4" {...propsTraco} />
+    </BaseIcone>
   );
 }
 
-export function WhatsAppIcon(props) {
+export function IconeSair(props) {
   return (
-    <IconBase {...props}>
+    <BaseIcone {...props}>
+      <path d="M9 20H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h3" {...propsTraco} />
+      <path d="m15 16 4-4-4-4" {...propsTraco} />
+      <path d="M19 12H9" {...propsTraco} />
+    </BaseIcone>
+  );
+}
+
+export function IconeWhatsApp(props) {
+  return (
+    <BaseIcone {...props}>
       <path
         d="M3.5 20.5 5 16.3A8.5 8.5 0 1 1 8.2 19.3L3.5 20.5Z"
-        {...strokeProps}
+        {...propsTraco}
       />
       <path
         d="M9 8.5c0 3.3 3.2 6.5 6.5 6.5l1-1.6-2-1-1 1c-1.2-.5-2.4-1.7-2.9-2.9l1-1-1-2L9 8.5Z"
-        {...strokeProps}
+        {...propsTraco}
       />
-    </IconBase>
+    </BaseIcone>
   );
 }
 
-export function ChevronRightIcon(props) {
+export function IconeSetaDireita(props) {
   return (
-    <IconBase {...props}>
-      <path d="m9 6 6 6-6 6" {...strokeProps} />
-    </IconBase>
+    <BaseIcone {...props}>
+      <path d="m9 6 6 6-6 6" {...propsTraco} />
+    </BaseIcone>
   );
 }

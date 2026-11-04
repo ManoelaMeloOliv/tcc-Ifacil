@@ -5,10 +5,16 @@ services:
     restart: always
     environment:
       POSTGRES_USER: stack
-      POSTGRES_PASSWORD: stack123
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       POSTGRES_DB: n8n
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres/criar-banco-evolution.sql:/docker-entrypoint-initdb.d/criar-banco-evolution.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U stack -d n8n"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   redis:
     image: redis:7
@@ -19,18 +25,18 @@ services:
       - redis_data:/data
 
   n8n:
-    image: n8nio/n8n:latest
+    image: n8nio/n8n:2.40.5
     container_name: n8n
     restart: always
     ports:
-      - "5678:5678"
+      - "127.0.0.1:5678:5678"
     environment:
       DB_TYPE: postgresdb
       DB_POSTGRESDB_HOST: postgres
       DB_POSTGRESDB_PORT: 5432
       DB_POSTGRESDB_DATABASE: n8n
       DB_POSTGRESDB_USER: stack
-      DB_POSTGRESDB_PASSWORD: stack123
+      DB_POSTGRESDB_PASSWORD: ${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}
       N8N_HOST: localhost
       N8N_PORT: 5678
       N8N_PROTOCOL: http
@@ -39,17 +45,19 @@ services:
     volumes:
       - n8n_data:/home/node/.n8n
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   evolution-api:
-    image: evoapicloud/evolution-api:latest
+    image: evoapicloud/evolution-api:latest@sha256:966625532d9076a2381e973a271307d107e6f070450de3abeeea8bd18be07252
     container_name: evolution_api
     restart: always
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
-      AUTHENTICATION_API_KEY: arthur123
+      AUTHENTICATION_API_KEY: ${EVOLUTION_API_KEY:?defina EVOLUTION_API_KEY no .env}
 
       SERVER_TYPE: http
       SERVER_PORT: 8080
@@ -57,7 +65,7 @@ services:
 
       DATABASE_ENABLED: true
       DATABASE_PROVIDER: postgresql
-      DATABASE_CONNECTION_URI: postgresql://stack:stack123@postgres:5432/evolution
+      DATABASE_CONNECTION_URI: postgresql://stack:${POSTGRES_PASSWORD:?defina POSTGRES_PASSWORD no .env}@postgres:5432/evolution
       DATABASE_CONNECTION_CLIENT_NAME: evolution
 
       CACHE_REDIS_ENABLED: true
@@ -67,8 +75,10 @@ services:
     volumes:
       - evolution_instances:/evolution/instances
     depends_on:
-      - postgres
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
 volumes:
   postgres_data:

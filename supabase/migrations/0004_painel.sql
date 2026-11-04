@@ -1,14 +1,3 @@
--- iFácil — tabelas base e views lidas pelo painel web
--- Idempotente: pode rodar mais de uma vez.
---
--- As tabelas usam "create table if not exists": num banco que já as tem,
--- nada é alterado. As views são recriadas (não guardam dados).
--- São as tabelas que registrar_atendimento (0002/0003) preenche.
-
--- 1) Tabelas
-
--- Temas das perguntas. "cor" alimenta o gráfico (hex) e "slug_cor"
--- a etiqueta do painel (emerald | amber | red | sky | slate).
 create table if not exists public.categorias (
   id        uuid primary key default gen_random_uuid(),
   nome      text not null unique,
@@ -33,7 +22,6 @@ create table if not exists public.contatos (
   total_mensagens    integer not null default 0
 );
 
--- Conversa = sequência de mensagens com intervalo de até 2 horas
 create table if not exists public.conversas (
   id           uuid primary key default gen_random_uuid(),
   contato_id   uuid not null references public.contatos (id) on delete cascade,
@@ -57,7 +45,6 @@ create table if not exists public.mensagens (
 );
 create index if not exists mensagens_conversa_idx on public.mensagens (conversa_id, enviada_em);
 
--- Perguntas que o bot não soube responder (servem para criar respostas padrão)
 create table if not exists public.perguntas_nao_respondidas (
   id           uuid primary key default gen_random_uuid(),
   contato_id   uuid references public.contatos (id) on delete set null,
@@ -67,7 +54,6 @@ create table if not exists public.perguntas_nao_respondidas (
   criada_em    timestamptz not null default now()
 );
 
--- Respostas padrão cadastradas pelo administrador
 create table if not exists public.respostas_padrao (
   id            uuid primary key default gen_random_uuid(),
   pergunta      text not null,
@@ -78,9 +64,6 @@ create table if not exists public.respostas_padrao (
   atualizado_em timestamptz not null default now()
 );
 
--- 2) Views do painel
---    security_invoker: a view respeita o RLS das tabelas de baixo.
---    Meses contados no fuso de Brasília.
 drop view if exists public.vw_resumo_dashboard;
 drop view if exists public.vw_estatisticas_mensais;
 drop view if exists public.vw_temas_mensais;
@@ -89,7 +72,6 @@ drop view if exists public.vw_historico_atendimentos;
 drop view if exists public.vw_respostas_padrao;
 drop view if exists public.vw_tempos_resposta;
 
--- Tempo entre cada pergunta e a resposta do bot que veio logo depois
 create view public.vw_tempos_resposta with (security_invoker = true) as
 select conversa_id, enviada_em,
        extract(epoch from enviada_em - anterior_em)::numeric as segundos
@@ -102,7 +84,6 @@ from (
 ) t
 where tipo = 'bot' and anterior_tipo = 'usuario';
 
--- Últimos 12 meses, inclusive os sem atendimento (barra zerada no gráfico)
 create view public.vw_estatisticas_mensais with (security_invoker = true) as
 with meses as (
   select generate_series(
@@ -152,8 +133,6 @@ from public.conversas c
 left join public.categorias cat on cat.id = c.categoria_id
 group by 1, 2, 3;
 
--- Perguntas repetidas no mês (texto normalizado). Ignora respostas curtas
--- de menu como "1", "oi" e "menu".
 create view public.vw_perguntas_frequentes with (security_invoker = true) as
 select date_trunc('month', m.enviada_em at time zone 'America/Sao_Paulo')::date as mes,
        min(m.mensagem)                                  as pergunta,
@@ -202,8 +181,6 @@ select r.id, r.pergunta, r.resposta, r.categoria_id, r.ativo, r.criado_em, r.atu
 from public.respostas_padrao r
 left join public.categorias cat on cat.id = r.categoria_id;
 
--- 3) Acesso: só admin logado (authenticated). Visitante (anon) não vê nada.
---    Mesmo modelo de sql/rls_policies.sql.
 do $$
 declare t text;
 begin

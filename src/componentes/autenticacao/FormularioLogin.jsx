@@ -1,25 +1,25 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { EmailIcon, EyeIcon, LockIcon } from '../interface/Icones'
+import { IconeEmail, IconeOlho, IconeCadeado } from '../interface/Icones'
 import { CampoFormulario } from '../interface/CampoFormulario'
-import { loginAdmin } from '../../servicos/autenticacao'
+import { entrarAdmin } from '../../servicos/autenticacao'
 
 export function FormularioLogin() {
-  const [showPassword, setShowPassword] = useState(false)
+  const [mostrarSenha, definirMostrarSenha] = useState(false)
   const [email, setEmail] = useState('')
   const [senha, setSenha] = useState('')
   const [erro, setErro] = useState('')
   const [enviando, setEnviando] = useState(false)
-  const navigate = useNavigate()
+  const navegar = useNavigate()
 
-  async function handleSubmit(event) {
-    event.preventDefault()
+  async function aoEnviar(evento) {
+    evento.preventDefault()
     setErro('')
     setEnviando(true)
 
     try {
-      await loginAdmin(email, senha)
-      navigate('/painel', { replace: true })
+      await entrarAdmin(email, senha)
+      navegar('/painel', { replace: true })
     } catch (falha) {
       setErro(falha.message || 'Não foi possível entrar. Tente novamente.')
     } finally {
@@ -27,46 +27,46 @@ export function FormularioLogin() {
     }
   }
 
-  const passwordAction = (
+  const acaoSenha = (
     <button
       type="button"
-      onClick={() => setShowPassword((current) => !current)}
+      onClick={() => definirMostrarSenha((atual) => !atual)}
       className="inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 transition hover:text-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500"
-      aria-label={showPassword ? 'Ocultar senha' : 'Mostrar senha'}
+      aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'}
     >
-      <EyeIcon hidden={showPassword} className="h-4 w-4" />
-      {showPassword ? 'Ocultar' : 'Mostrar'}
+      <IconeOlho oculto={mostrarSenha} className="h-4 w-4" />
+      {mostrarSenha ? 'Ocultar' : 'Mostrar'}
     </button>
   )
 
   return (
-    <form onSubmit={handleSubmit} className="mt-8 space-y-5">
+    <form onSubmit={aoEnviar} className="mt-8 space-y-5">
       <CampoFormulario
         id="email"
         name="email"
         type="email"
-        label="E-mail"
-        icon={EmailIcon}
+        rotulo="E-mail"
+        icone={IconeEmail}
         placeholder="seuemail@exemplo.com"
         autoComplete="email"
         value={email}
-        onChange={(event) => setEmail(event.target.value)}
+        onChange={(evento) => setEmail(evento.target.value)}
         disabled={enviando}
         required
       />
 
       <CampoFormulario
-        id="password"
-        name="password"
-        type={showPassword ? 'text' : 'password'}
-        label="Senha"
-        icon={LockIcon}
-        action={passwordAction}
+        id="senha"
+        name="senha"
+        type={mostrarSenha ? 'text' : 'password'}
+        rotulo="Senha"
+        icone={IconeCadeado}
+        acao={acaoSenha}
         placeholder="Digite sua senha"
         autoComplete="current-password"
         minLength="6"
         value={senha}
-        onChange={(event) => setSenha(event.target.value)}
+        onChange={(evento) => setSenha(evento.target.value)}
         disabled={enviando}
         required
       />
@@ -81,7 +81,7 @@ export function FormularioLogin() {
         <label className="flex cursor-pointer items-center gap-2.5 text-slate-600">
           <input
             type="checkbox"
-            name="remember"
+            name="lembrar"
             className="h-4 w-4 rounded border-slate-300 accent-emerald-600"
           />
           Lembrar meu acesso

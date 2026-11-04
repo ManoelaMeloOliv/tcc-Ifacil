@@ -1,92 +1,67 @@
-# iFácil — Estrutura de Monorepo (TCC)
+# iFácil
 
-Este repositório concentra o **frontend web** do projeto iFácil e prepara a estrutura documental para evolução do TCC com integração externa de **Supabase** e **n8n**.
-
-> Importante: a implementação atual do frontend foi mantida no diretório raiz por compatibilidade e **não teve alteração de lógica/comportamento**.
-
-## Contexto do TCC
-
-O objetivo é consolidar uma arquitetura em que a aplicação web consome:
-
-1. **Supabase** para autenticação e persistência de dados.
-2. **Pipeline RAG** orquestrado via **n8n** para chat com base de conhecimento.
+Assistente de atendimento por WhatsApp para o Instituto Federal (TCC). Responde dúvidas de alunos com menu guiado, respostas padrão cadastradas pela secretaria e, quando necessário, IA com busca nos editais (RAG). Um painel web permite acompanhar atendimentos e editar o conteúdo do bot.
 
 ## Arquitetura
 
-- **Frontend web → Supabase** (auth + dados)
-- **Frontend web → Webhook n8n → pipeline RAG/LLM/fonte de conhecimento → resposta ao usuário**
+```text
+Aluno (WhatsApp)
+      │
+Evolution API ──webhook──▶ n8n ──▶ Supabase (Postgres + Auth + pgvector)
+      ▲                     │              ▲
+      └──────resposta───────┘              │
+                          Gemini (IA)      │
+                                           │
+Painel web (React) ────────────────────────┘  (login do admin + RLS)
+```
 
-n8n e Supabase são serviços externos ao repositório: este projeto não provisiona esses ambientes.
+1. **Evolution API** conecta o número de WhatsApp e entrega cada mensagem ao n8n.
+2. **n8n** orquestra o atendimento: roteia pelo menu (`ifacil_rotear`), procura resposta padrão (`buscar_resposta_padrao`), cai no agente RAG com Gemini e registra tudo (`registrar_atendimento`).
+3. **Supabase** guarda conversas, respostas, mensagens do bot e os vetores dos editais.
+4. **Painel** (este frontend) lê e edita o Supabase usando o login do administrador; as políticas de RLS protegem os dados.
 
-## Layout atual do repositório
+## Estrutura
 
 ```text
-.
-├── src/                         # Frontend React/Vite (existente)
-├── scripts/                     # Scripts utilitários existentes
-├── sql/                         # SQL existente do projeto
-├── n8n/
-│   └── workflows/README.md      # Guia para versionar exports JSON de workflows
-├── supabase/
-│   └── migrations/
-│       └── 0001_initial_schema.example.sql  # Exemplo ilustrativo de migração
-├── .env.example
-├── package.json
-└── README.md
+src/
+  paginas/        telas (login, visão geral, perguntas, histórico)
+  componentes/    peças de interface, agrupadas por área
+  servicos/       acesso ao Supabase (única camada que fala com o banco)
+  lib/            cliente Supabase
+supabase/migrations/   esquema do banco, em ordem (0001 é só exemplo)
+sql/                   diagnóstico e políticas de RLS avulsas
+n8n/workflows/         export do fluxo (sem credenciais)
+docker/ e docker-compose.yml   Postgres, Redis, n8n e Evolution API locais
+scripts/               teste de conexão e RLS do banco
 ```
 
-## Papéis das novas pastas
-
-### `n8n/workflows/`
-
-Armazena exports JSON de workflows n8n do chat RAG, com versionamento em Git e revisão de segurança antes do commit.
-
-### `supabase/migrations/`
-
-Armazena migrações SQL versionadas. O arquivo `0001_initial_schema.example.sql` é **apenas exemplo ilustrativo** e deve ser revisado antes de aplicação real.
-
-## Ambiente local (frontend)
-
-Use os comandos já existentes do projeto:
+## Subir o ambiente
 
 ```bash
+cp .env.example .env
 npm install
 npm run dev
-npm run lint
-npm run build
-npm run preview
-npm run testar:banco
 ```
 
-## Configuração de ambiente
+Preencha no `.env`: `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY` (frontend; `VITE_NOME_INSTITUICAO` é opcional) e, para o docker-compose, `POSTGRES_PASSWORD` e `EVOLUTION_API_KEY`.
 
-1. Copie `.env.example` para `.env`.
-2. Preencha `VITE_SUPABASE_URL` e `VITE_SUPABASE_ANON_KEY`.
-3. Configure `VITE_N8N_RAG_WEBHOOK_URL` (e opcionais, se necessário).
+```bash
+docker compose up -d
+```
 
-## Diretrizes de segurança
+## Banco de dados
 
-- `.env` não deve ser commitado.
-- `VITE_SUPABASE_ANON_KEY` é chave pública de cliente; use somente permissões e RLS adequadas.
-- **Nunca** exponha `SUPABASE_SERVICE_ROLE_KEY` no browser.
-- Credenciais/sigilos do n8n devem permanecer no ambiente do n8n, nunca em exports JSON nem no Git.
+Rode no SQL Editor do Supabase, em ordem, as migrações `0002` a `0011` (veja `supabase/README.md`). Todas são idempotentes. Depois, `npm run testar:banco` confere que visitantes sem login não leem nada.
 
-## Fluxo recomendado (n8n e Supabase)
+## Scripts
 
-### Workflows n8n
+`npm run dev` · `npm run build` · `npm run lint` · `npm test` · `npm run testar:banco`
 
-1. Modelar/ajustar workflow no n8n (externo).
-2. Exportar JSON sem credenciais.
-3. Salvar em `n8n/workflows/` com nome versionado.
-4. Abrir PR descrevendo mudanças do fluxo.
+A cada push, o GitHub Actions (`.github/workflows/verificacao.yml`) roda lint, testes e build.
 
-### Migrações Supabase
+## Segurança
 
-1. Propor/editar migração em `supabase/migrations/`.
-2. Revisar segurança (RLS, privilégios e impacto em produção).
-3. Aplicar a migração no ambiente Supabase apropriado (fora deste repositório).
-4. Registrar no PR o contexto da alteração.
-
----
-
-Seções de infraestrutura (n8n/Supabase) aqui são de documentação e scaffolding: a execução real ocorre em ambientes externos.
+- `.env` nunca vai para o Git.
+- Só a chave `anon` vai para o navegador; a `service_role` fica apenas no n8n.
+- Desative o cadastro público de usuários no Supabase Auth: qualquer usuário logado é tratado como administrador.
+- Credenciais do n8n ficam no próprio n8n, nunca no JSON exportado.

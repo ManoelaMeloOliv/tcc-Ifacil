@@ -6,7 +6,7 @@ const NOMES_MES_COMPLETO = [
   'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
 ]
 
-export async function getEstatisticasMensais() {
+export async function buscarEstatisticasMensais() {
   const { data, error } = await supabase
     .from('vw_estatisticas_mensais')
     .select('*')
@@ -15,23 +15,22 @@ export async function getEstatisticasMensais() {
   if (error) throw error
 
   return (data ?? []).map((linha) => {
-    // 'YYYY-MM-DD': lê o mês direto do texto para não cair no mês anterior por causa do fuso
-    const indexMes = Number(linha.mes.slice(5, 7)) - 1
+    const indiceMes = Number(linha.mes.slice(5, 7)) - 1
 
     return {
-      month: NOMES_MES[indexMes],
-      fullMonth: NOMES_MES_COMPLETO[indexMes],
+      mes: NOMES_MES[indiceMes],
+      mesCompleto: NOMES_MES_COMPLETO[indiceMes],
       anoMes: linha.mes,
-      contacts: linha.total_contatos ?? 0,
-      services: linha.total_atendimentos ?? 0,
-      resolved: linha.total_resolvidos ?? 0,
-      questions: linha.total_perguntas ?? 0,
-      responseTime: Number(linha.tempo_resposta_medio_seg ?? 0),
+      contatos: linha.total_contatos ?? 0,
+      atendimentos: linha.total_atendimentos ?? 0,
+      resolvidos: linha.total_resolvidos ?? 0,
+      perguntas: linha.total_perguntas ?? 0,
+      tempoResposta: Number(linha.tempo_resposta_medio_seg ?? 0),
     }
   })
 }
 
-export async function getDistribuicaoTemas(anoMes) {
+export async function buscarDistribuicaoTemas(anoMes) {
   if (!anoMes) return []
 
   const { data, error } = await supabase
@@ -45,14 +44,14 @@ export async function getDistribuicaoTemas(anoMes) {
 
   return (data ?? [])
     .map((linha) => ({
-      name: linha.tema,
-      color: linha.cor,
-      value: totalGeral ? Math.round((linha.total / totalGeral) * 100) : 0,
+      nome: linha.tema,
+      cor: linha.cor,
+      valor: totalGeral ? Math.round((linha.total / totalGeral) * 100) : 0,
     }))
-    .sort((a, b) => b.value - a.value)
+    .sort((a, b) => b.valor - a.valor)
 }
 
-export async function getPerguntasFrequentes(anoMes, limite = 3) {
+export async function buscarPerguntasFrequentes(anoMes, limite = 3) {
   if (!anoMes) return []
 
   const { data, error } = await supabase
@@ -65,15 +64,9 @@ export async function getPerguntasFrequentes(anoMes, limite = 3) {
   if (error) throw error
 
   return (data ?? []).map((linha, indice) => ({
-    position: indice + 1,
-    question: linha.pergunta,
-    topic: linha.tema ?? 'Outros',
-    amount: linha.vezes_utilizada ?? 0,
+    posicao: indice + 1,
+    pergunta: linha.pergunta,
+    tema: linha.tema ?? 'Outros',
+    quantidade: linha.vezes_utilizada ?? 0,
   }))
-}
-
-export async function getResumoDashboard() {
-  const { data, error } = await supabase.from('vw_resumo_dashboard').select('*').single()
-  if (error) throw error
-  return data
 }

@@ -1,9 +1,3 @@
-// Testa a conexão com o Supabase, o RLS e o login de admin.
-//
-//   npm run testar:banco
-//   npm run testar:banco -- admin@escola.com minhasenha
-//
-// Sem credenciais, roda só a parte 1 (visitante deve ser bloqueado).
 import { readFileSync } from 'node:fs'
 import { createClient } from '@supabase/supabase-js'
 

@@ -1,8 +1,8 @@
 import { FormularioLogin } from '../componentes/autenticacao/FormularioLogin'
-import { CheckIcon } from '../componentes/interface/Icones'
+import { IconeConfirmar } from '../componentes/interface/Icones'
 import { LogoMarca } from '../componentes/marca/LogoMarca'
 
-const benefits = [
+const beneficios = [
   'Atendimentos centralizados em um só lugar',
   'Gestão simples, rápida e segura',
   'Acompanhamento da equipe em tempo real',
@@ -18,7 +18,7 @@ export function PaginaLogin() {
           <div className="absolute right-20 top-32 h-3 w-3 rounded-full bg-red-500 shadow-[0_0_30px_8px_rgba(239,68,68,0.25)]" />
 
           <div className="relative z-10">
-            <LogoMarca light />
+            <LogoMarca claro />
           </div>
 
           <div className="relative z-10 max-w-xl py-16">
@@ -38,12 +38,12 @@ export function PaginaLogin() {
             </p>
 
             <ul className="mt-10 space-y-4">
-              {benefits.map((benefit) => (
-                <li key={benefit} className="flex items-center gap-3 text-sm text-emerald-50/90">
+              {beneficios.map((beneficio) => (
+                <li key={beneficio} className="flex items-center gap-3 text-sm text-emerald-50/90">
                   <span className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-300">
-                    <CheckIcon className="h-4 w-4" />
+                    <IconeConfirmar className="h-4 w-4" />
                   </span>
-                  {benefit}
+                  {beneficio}
                 </li>
               ))}
             </ul>

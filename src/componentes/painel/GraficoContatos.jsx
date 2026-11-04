@@ -1,11 +1,11 @@
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 
-const numberFormatter = new Intl.NumberFormat('pt-BR')
+const formatadorNumero = new Intl.NumberFormat('pt-BR')
 
-export function GraficoContatos({ months, selectedMonth, onSelectMonth }) {
-  function selectMonth(barData) {
-    if (barData?.payload) {
-      onSelectMonth(barData.payload)
+export function GraficoContatos({ meses, mesSelecionado, aoSelecionarMes }) {
+  function selecionarMes(dadosBarra) {
+    if (dadosBarra?.payload) {
+      aoSelecionarMes(dadosBarra.payload)
     }
   }
 
@@ -21,23 +21,23 @@ export function GraficoContatos({ months, selectedMonth, onSelectMonth }) {
 
       <div className="mt-6 h-72 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={months} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
+          <BarChart data={meses} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
             <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />
-            <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
+            <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
             <YAxis axisLine={false} tickLine={false} allowDecimals={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
             <Bar
-              dataKey="contacts"
+              dataKey="contatos"
               radius={[7, 7, 2, 2]}
               maxBarSize={34}
               className="cursor-pointer"
               activeBar={false}
               isAnimationActive={false}
-              onClick={selectMonth}
+              onClick={selecionarMes}
             >
-              {months.map((item) => (
+              {meses.map((item) => (
                 <Cell
                   key={item.anoMes}
-                  fill={item.anoMes === selectedMonth.anoMes ? '#dc2626' : '#059669'}
+                  fill={item.anoMes === mesSelecionado.anoMes ? '#dc2626' : '#059669'}
                 />
               ))}
             </Bar>
@@ -46,10 +46,10 @@ export function GraficoContatos({ months, selectedMonth, onSelectMonth }) {
       </div>
 
       <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-4" aria-live="polite">
-        <div><p className="text-xs text-slate-500">Mês selecionado</p><p className="mt-1 text-sm font-bold text-slate-900">{selectedMonth.fullMonth}</p></div>
-        <div><p className="text-xs text-slate-500">Contatos</p><p className="mt-1 text-sm font-bold text-slate-900">{numberFormatter.format(selectedMonth.contacts)}</p></div>
-        <div><p className="text-xs text-slate-500">Perguntas</p><p className="mt-1 text-sm font-bold text-slate-900">{numberFormatter.format(selectedMonth.questions)}</p></div>
-        <div><p className="text-xs text-slate-500">Resolvidos pelo bot</p><p className="mt-1 text-sm font-bold text-emerald-700">{numberFormatter.format(selectedMonth.resolved)}</p></div>
+        <div><p className="text-xs text-slate-500">Mês selecionado</p><p className="mt-1 text-sm font-bold text-slate-900">{mesSelecionado.mesCompleto}</p></div>
+        <div><p className="text-xs text-slate-500">Contatos</p><p className="mt-1 text-sm font-bold text-slate-900">{formatadorNumero.format(mesSelecionado.contatos)}</p></div>
+        <div><p className="text-xs text-slate-500">Perguntas</p><p className="mt-1 text-sm font-bold text-slate-900">{formatadorNumero.format(mesSelecionado.perguntas)}</p></div>
+        <div><p className="text-xs text-slate-500">Resolvidos pelo bot</p><p className="mt-1 text-sm font-bold text-emerald-700">{formatadorNumero.format(mesSelecionado.resolvidos)}</p></div>
       </div>
     </article>
   )

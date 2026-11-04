@@ -1,5 +1,5 @@
-export function LogoMarca({ light = false }) {
-  const textColor = light ? 'text-white' : 'text-slate-900'
+export function LogoMarca({ claro = false }) {
+  const corTexto = claro ? 'text-white' : 'text-slate-900'
 
   return (
     <div className="inline-flex items-center gap-3" aria-label="iFácil">
@@ -12,7 +12,7 @@ export function LogoMarca({ light = false }) {
         <span className="h-3 w-3 rounded-sm bg-emerald-500" />
       </div>
 
-      <div className={`text-2xl font-extrabold tracking-tight ${textColor}`}>
+      <div className={`text-2xl font-extrabold tracking-tight ${corTexto}`}>
         i<span className="text-emerald-500">Fácil</span>
       </div>
     </div>

@@ -1,8 +1,3 @@
--- iFácil — estruturas usadas pelo fluxo n8n (WhatsApp + RAG)
--- Idempotente: pode rodar mais de uma vez.
-
--- 1) Base vetorial dos editais (nó "Supabase Vector Store" do n8n)
---    gemini-embedding-001 gera vetores de 3072 dimensões.
 create table if not exists public.edital_chunks (
   id        bigserial primary key,
   content   text not null,
@@ -28,7 +23,6 @@ as $$
   limit match_count;
 $$;
 
--- 2) Memória da conversa (nó "Postgres Chat Memory" do n8n)
 create table if not exists public.n8n_chat_histories (
   id         serial primary key,
   session_id varchar(255) not null,
@@ -38,9 +32,6 @@ create index if not exists n8n_chat_histories_session_idx
   on public.n8n_chat_histories (session_id);
 alter table public.n8n_chat_histories enable row level security;
 
--- 3) Registro de cada atendimento nas tabelas lidas pelo painel
---    (contatos -> conversas -> mensagens). Chamado pelo n8n via RPC.
---    p_status: respondida | sem_info | nao_texto | erro
 create or replace function public.registrar_atendimento(
   p_telefone    text,
   p_nome        text,
@@ -61,7 +52,6 @@ declare
   v_status    text;
   v_sem_info  boolean := p_status = 'sem_info';
   v_texto     text    := lower(coalesce(p_pergunta, ''));
-  -- Evita tempo de resposta negativo se o relógio de quem envia estiver adiantado
   v_recebida  timestamptz := least(coalesce(p_recebida_em, now()), now());
 begin
   v_status := case p_status
@@ -87,7 +77,6 @@ begin
     else 'Outros'
   end;
 
-  -- Mesma conversa se o contato falou nas últimas 2 horas; senão abre outra
   select c.id into v_conversa
   from conversas c
   where c.contato_id = v_contato
@@ -115,7 +104,6 @@ begin
     update conversas set encerrada_em = now() where id = v_conversa;
   end if;
 
-  -- Pergunta e resposta (o painel mede o tempo entre 'usuario' e 'bot')
   insert into mensagens (conversa_id, tipo, mensagem, enviada_em, utilizou_rag, encaminhada_humano)
   values (v_conversa, 'usuario', coalesce(nullif(p_pergunta, ''), '(mensagem sem texto)'), v_recebida, false, false),
          (v_conversa, 'bot', p_resposta, now(), p_status in ('respondida', 'sem_info'), v_sem_info);
@@ -129,7 +117,6 @@ begin
 end;
 $$;
 
--- Só o service_role (n8n) executa as funções de escrita/busca
 revoke execute on function public.registrar_atendimento(text, text, text, text, text, timestamptz) from public, anon, authenticated;
 grant  execute on function public.registrar_atendimento(text, text, text, text, text, timestamptz) to service_role;
 revoke execute on function public.match_edital_chunks(extensions.vector, int, jsonb) from public, anon, authenticated;

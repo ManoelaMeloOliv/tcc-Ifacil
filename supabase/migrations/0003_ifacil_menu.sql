@@ -1,8 +1,3 @@
--- iFácil — menu de atendimento (AIFÁCIL) e transferência para humano
--- Idempotente: pode rodar mais de uma vez.
-
--- 1) Estado do atendimento por contato do WhatsApp
---    Sessão = mensagens com intervalo de até 2 horas (mesma regra das conversas).
 create table if not exists public.atendimento_estado (
   telefone           text primary key,
   ultima_mensagem_em timestamptz,
@@ -12,8 +7,6 @@ create table if not exists public.atendimento_estado (
 );
 alter table public.atendimento_estado enable row level security;
 
--- 2) Decide o que fazer com a mensagem recebida e já atualiza o estado.
---    rota: menu | opcao | pergunta | humano_ativo
 create or replace function public.ifacil_rotear(p_telefone text, p_texto text)
 returns table (rota text, opcao smallint)
 language plpgsql
@@ -32,10 +25,8 @@ begin
 
   v_nova := e.ultima_mensagem_em is null or e.ultima_mensagem_em < now() - interval '2 hours';
 
-  -- "1", "1.", "1 -", "opção 1"
   if t ~ '^(op[cç][aã]o\s*)?[1-4]\s*[-.)]?$' then
     v_opcao := substring(t from '[1-4]')::smallint;
-  -- pedido de atendente escrito por extenso
   elsif t ~ '(falar com (um |uma |algu[eé]m|atendente|humano|pessoa)|atendente humano|atendimento humano)' then
     v_opcao := 4;
   end if;
@@ -47,7 +38,6 @@ begin
        set ultima_mensagem_em = now(), opcao = null, humano = false, atualizado_em = now()
      where s.telefone = p_telefone;
   elsif e.humano then
-    -- Atendente humano assumiu: o robô fica em silêncio
     rota := 'humano_ativo';
     opcao := 4;
     update public.atendimento_estado s
@@ -74,8 +64,6 @@ $$;
 revoke execute on function public.ifacil_rotear(text, text) from public, anon, authenticated;
 grant  execute on function public.ifacil_rotear(text, text) to service_role;
 
--- 3) registrar_atendimento: novos status vindos do menu
---    p_status: respondida | sem_info | nao_texto | erro | menu | opcao | humano
 create or replace function public.registrar_atendimento(
   p_telefone    text,
   p_nome        text,
@@ -97,7 +85,6 @@ declare
   v_sem_info  boolean := p_status = 'sem_info';
   v_humano    boolean := p_status = 'humano';
   v_texto     text    := lower(coalesce(p_pergunta, ''));
-  -- Evita tempo de resposta negativo se o relógio de quem envia estiver adiantado
   v_recebida  timestamptz := least(coalesce(p_recebida_em, now()), now());
 begin
   v_status := case p_status
@@ -124,7 +111,6 @@ begin
     else 'Outros'
   end;
 
-  -- Mesma conversa se o contato falou nas últimas 2 horas; senão abre outra
   select c.id into v_conversa
   from conversas c
   where c.contato_id = v_contato
@@ -152,7 +138,6 @@ begin
     update conversas set encerrada_em = now() where id = v_conversa;
   end if;
 
-  -- Pergunta e resposta (o painel mede o tempo entre 'usuario' e 'bot')
   insert into mensagens (conversa_id, tipo, mensagem, enviada_em, utilizou_rag, encaminhada_humano)
   values (v_conversa, 'usuario', coalesce(nullif(p_pergunta, ''), '(mensagem sem texto)'), v_recebida, false, false),
          (v_conversa, 'bot', p_resposta, now(), p_status in ('respondida', 'sem_info'), v_sem_info or v_humano);
@@ -162,7 +147,6 @@ begin
     values (v_contato, p_pergunta, 'Informação não encontrada nos editais', v_categoria);
   end if;
 
-  -- Encaminhado para humano (opção 4 ou instabilidade): o robô fica em silêncio
   if v_humano then
     insert into public.atendimento_estado (telefone, ultima_mensagem_em, opcao, humano)
     values (p_telefone, now(), 4, true)

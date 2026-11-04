@@ -3,29 +3,63 @@ import { supabase } from '../lib/supabaseClient'
 function paraResposta(linha) {
   return {
     id: linha.id,
-    question: linha.pergunta,
-    answer: linha.resposta,
-    categoryId: linha.categoria_id,
-    active: linha.ativo,
-    updatedAt: linha.atualizado_em,
+    pergunta: linha.pergunta,
+    resposta: linha.resposta,
+    categoriaId: linha.categoria_id,
+    ativa: linha.ativo,
+    ordem: linha.ordem,
+    criadaEm: linha.criado_em,
+    atualizadaEm: linha.atualizado_em,
   }
 }
 
-function paraLinha({ question, answer, categoryId, active }) {
-  return { pergunta: question, resposta: answer, categoria_id: categoryId || null, ativo: active }
+function paraLinha({ pergunta, resposta, categoriaId, ativa }) {
+  return { pergunta, resposta, categoria_id: categoriaId || null, ativo: ativa }
 }
 
-export async function getCategorias() {
+export async function buscarCategorias() {
   const { data, error } = await supabase
     .from('categorias')
-    .select('id, nome, cor, slug_cor')
+    .select('id, nome, slug_cor, rotulo_menu, nativa, ordem_menu')
+    .order('ordem_menu')
     .order('nome')
 
   if (error) throw error
-  return (data ?? []).map((linha) => ({ id: linha.id, name: linha.nome, color: linha.slug_cor }))
+  return (data ?? []).map((linha) => ({
+    id: linha.id,
+    nome: linha.rotulo_menu?.trim() || linha.nome,
+    cor: linha.slug_cor,
+    nativa: linha.nativa,
+    ordem: linha.ordem_menu,
+  }))
 }
 
-export async function getRespostasPadrao() {
+export async function criarAssunto(nome, ordem) {
+  const { error } = await supabase.from('categorias').insert({ nome, rotulo_menu: nome, ordem_menu: ordem })
+  if (error) throw error
+}
+
+export async function renomearAssunto(id, nome) {
+  const { error } = await supabase.from('categorias').update({ rotulo_menu: nome }).eq('id', id)
+  if (error) throw error
+}
+
+export async function excluirAssunto(id) {
+  const { error } = await supabase.from('categorias').delete().eq('id', id)
+  if (error) throw error
+}
+
+export async function ordenarAssuntos(ids) {
+  const { error } = await supabase.rpc('painel_ordenar_assuntos', { p_ids: ids })
+  if (error) throw error
+}
+
+export async function ordenarRespostas(ids) {
+  const { error } = await supabase.rpc('painel_ordenar_respostas', { p_ids: ids })
+  if (error) throw error
+}
+
+export async function buscarRespostasPadrao() {
   const { data, error } = await supabase
     .from('vw_respostas_padrao')
     .select('*')
@@ -49,7 +83,7 @@ export async function criarRespostaPadrao(resposta) {
 export async function atualizarRespostaPadrao(id, resposta) {
   const { data, error } = await supabase
     .from('respostas_padrao')
-    .update({ ...paraLinha(resposta), atualizado_em: new Date().toISOString() })
+    .update(paraLinha(resposta))
     .eq('id', id)
     .select()
     .single()
@@ -63,7 +97,7 @@ export async function excluirRespostaPadrao(id) {
   if (error) throw error
 }
 
-export async function getMensagensBot() {
+export async function buscarMensagensBot() {
   const { data, error } = await supabase
     .from('mensagens_bot')
     .select('chave, titulo, descricao, texto, atualizado_em')
@@ -71,22 +105,22 @@ export async function getMensagensBot() {
 
   if (error) throw error
   return (data ?? []).map((linha) => ({
-    key: linha.chave,
-    title: linha.titulo,
-    description: linha.descricao ?? '',
-    text: linha.texto,
-    updatedAt: linha.atualizado_em,
+    chave: linha.chave,
+    titulo: linha.titulo,
+    descricao: linha.descricao ?? '',
+    texto: linha.texto,
+    atualizadaEm: linha.atualizado_em,
   }))
 }
 
 export async function atualizarMensagemBot(chave, texto) {
   const { data, error } = await supabase
     .from('mensagens_bot')
-    .update({ texto, atualizado_em: new Date().toISOString() })
+    .update({ texto })
     .eq('chave', chave)
     .select('chave, texto, atualizado_em')
     .single()
 
   if (error) throw error
-  return { key: data.chave, text: data.texto, updatedAt: data.atualizado_em }
+  return { chave: data.chave, texto: data.texto, atualizadaEm: data.atualizado_em }
 }

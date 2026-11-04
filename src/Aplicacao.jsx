@@ -4,24 +4,24 @@ import { PaginaLogin } from './paginas/PaginaLogin'
 import { RotaProtegida, RotaPublica } from './componentes/autenticacao/RotaProtegida'
 
 const PaginaPainel = lazy(() =>
-  import('./paginas/PaginaPainel').then((module) => ({
-    default: module.PaginaPainel,
+  import('./paginas/PaginaPainel').then((modulo) => ({
+    default: modulo.PaginaPainel,
   })),
 )
 
 const PaginaPerguntas = lazy(() =>
-  import('./paginas/PaginaPerguntas').then((module) => ({
-    default: module.PaginaPerguntas,
+  import('./paginas/PaginaPerguntas').then((modulo) => ({
+    default: modulo.PaginaPerguntas,
   })),
 )
 
 const PaginaHistorico = lazy(() =>
-  import('./paginas/PaginaHistorico').then((module) => ({
-    default: module.PaginaHistorico,
+  import('./paginas/PaginaHistorico').then((modulo) => ({
+    default: modulo.PaginaHistorico,
   })),
 )
 
-function PageLoading() {
+function CarregandoPagina() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-50">
       <div className="text-center">
@@ -35,7 +35,7 @@ function PageLoading() {
 function PaginaProtegida({ children }) {
   return (
     <RotaProtegida>
-      <Suspense fallback={<PageLoading />}>{children}</Suspense>
+      <Suspense fallback={<CarregandoPagina />}>{children}</Suspense>
     </RotaProtegida>
   )
 }

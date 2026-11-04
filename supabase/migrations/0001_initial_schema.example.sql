@@ -1,8 +1,3 @@
--- EXEMPLO ILUSTRATIVO (NÃO APLICADO):
--- Este arquivo é um ponto de partida para o TCC e deve ser revisado/adaptado
--- antes de qualquer execução em ambiente real.
--- Não inclua segredos, chaves privadas ou dados sensíveis em migrações versionadas.
-
 create extension if not exists pgcrypto;
 
 create table if not exists public.profiles (
@@ -44,7 +39,6 @@ create index if not exists idx_chat_conversations_user_id on public.chat_convers
 create index if not exists idx_chat_messages_conversation_id on public.chat_messages (conversation_id);
 create index if not exists idx_chat_messages_created_at on public.chat_messages (created_at);
 
--- Exemplo inicial de RLS (revise as políticas conforme o modelo de autorização do projeto)
 alter table public.profiles enable row level security;
 alter table public.knowledge_documents enable row level security;
 alter table public.chat_conversations enable row level security;

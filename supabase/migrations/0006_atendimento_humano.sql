@@ -1,12 +1,3 @@
--- iFácil — fila de atendimento humano no painel
--- Idempotente: pode rodar mais de uma vez. Rodar depois da 0005.
---
--- 1) Novo status "finalizada": a secretaria encerrou o atendimento.
--- 2) Conversa encaminhada para humano não volta a "resolvida" sozinha
---    (resposta atrasada do bot não apaga o pedido de atendente).
--- 3) painel_finalizar_atendimento: botão "Marcar como resolvido".
-
--- 1) Status permitidos em conversas
 do $$
 declare r record;
 begin
@@ -24,8 +15,6 @@ alter table public.conversas
   add constraint conversas_status_check
   check (status in ('resolvida', 'encaminhada', 'em_andamento', 'finalizada'));
 
--- 2) registrar_atendimento: pedido de atendente não é sobrescrito
---    p_status: respondida | padrao | sem_info | nao_texto | erro | menu | opcao | humano
 create or replace function public.registrar_atendimento(
   p_telefone    text,
   p_nome        text,
@@ -47,7 +36,6 @@ declare
   v_sem_info  boolean := p_status = 'sem_info';
   v_humano    boolean := p_status = 'humano';
   v_texto     text    := lower(coalesce(p_pergunta, ''));
-  -- Evita tempo de resposta negativo se o relógio de quem envia estiver adiantado
   v_recebida  timestamptz := least(coalesce(p_recebida_em, now()), now());
 begin
   v_status := case p_status
@@ -75,7 +63,6 @@ begin
     else 'Outros'
   end;
 
-  -- Mesma conversa se o contato falou nas últimas 2 horas; senão abre outra
   select c.id into v_conversa
   from conversas c
   where c.contato_id = v_contato
@@ -89,8 +76,6 @@ begin
     values (v_contato, v_recebida, v_status, v_categoria)
     returning id into v_conversa;
   else
-    -- Pedido de atendente vale até a secretaria finalizar: uma resposta do bot
-    -- que chega depois (ex.: Gemini lento) não volta a conversa para "resolvida"
     if v_status <> 'encaminhada' and exists (
       select 1
       from conversas c
@@ -114,7 +99,6 @@ begin
     update conversas set encerrada_em = now() where id = v_conversa;
   end if;
 
-  -- Pergunta e resposta (o painel mede o tempo entre 'usuario' e 'bot')
   insert into mensagens (conversa_id, tipo, mensagem, enviada_em, utilizou_rag, encaminhada_humano)
   values (v_conversa, 'usuario', coalesce(nullif(p_pergunta, ''), '(mensagem sem texto)'), v_recebida, false, false),
          (v_conversa, 'bot', p_resposta, now(), p_status in ('respondida', 'sem_info'), v_sem_info or v_humano);
@@ -124,7 +108,6 @@ begin
     values (v_contato, p_pergunta, 'Informação não encontrada nos editais', v_categoria);
   end if;
 
-  -- Encaminhado para humano (opção 4 ou instabilidade): o robô fica em silêncio
   if v_humano then
     insert into public.atendimento_estado (telefone, ultima_mensagem_em, opcao, humano)
     values (p_telefone, now(), 4, true)
@@ -139,8 +122,6 @@ $$;
 revoke execute on function public.registrar_atendimento(text, text, text, text, text, timestamptz) from public, anon, authenticated;
 grant  execute on function public.registrar_atendimento(text, text, text, text, text, timestamptz) to service_role;
 
--- 3) Secretaria encerra o atendimento: conversa finalizada e o bot volta
---    a responder esse contato.
 create or replace function public.painel_finalizar_atendimento(p_conversa uuid)
 returns void
 language plpgsql
@@ -169,8 +150,6 @@ $$;
 revoke execute on function public.painel_finalizar_atendimento(uuid) from public, anon;
 grant  execute on function public.painel_finalizar_atendimento(uuid) to authenticated;
 
--- 4) Corrige conversas já afetadas: pediram atendente, ainda aguardam,
---    mas uma resposta atrasada do bot marcou como "resolvida"
 update conversas c
    set status = 'encaminhada', encerrada_em = null
   from contatos ct
