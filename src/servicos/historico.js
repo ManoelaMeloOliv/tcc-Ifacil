@@ -1,10 +1,10 @@
 import { supabase } from '../lib/supabaseClient'
 
 export const statusAtendimento = {
-  encaminhada: { rotulo: 'Aguardando atendente', classes: 'bg-red-50 text-red-600 ring-red-100' },
-  em_andamento: { rotulo: 'Em andamento', classes: 'bg-amber-50 text-amber-700 ring-amber-100' },
-  resolvida: { rotulo: 'Respondido pelo bot', classes: 'bg-emerald-50 text-emerald-700 ring-emerald-100' },
-  finalizada: { rotulo: 'Finalizado', classes: 'bg-slate-100 text-slate-600 ring-slate-200' },
+  encaminhada: { rotulo: 'Aguardando atendente', classes: 'bg-red-600 text-white' },
+  em_andamento: { rotulo: 'Em andamento', classes: 'bg-amber-50 text-amber-700' },
+  resolvida: { rotulo: 'Respondido pelo bot', classes: 'bg-emerald-50 text-emerald-700' },
+  finalizada: { rotulo: 'Finalizado', classes: 'bg-slate-100 text-slate-500' },
 }
 
 const LIMITE_HISTORICO = 500
@@ -37,16 +37,8 @@ export function iniciaisDoNome(nome) {
   return primeiras.join('') || '??'
 }
 
-export async function buscarHistoricoAtendimentos() {
-  const { data, error } = await supabase
-    .from('vw_historico_atendimentos')
-    .select('*')
-    .order('iniciada_em', { ascending: false })
-    .limit(LIMITE_HISTORICO)
-
-  if (error) throw error
-
-  return (data ?? []).map((linha) => ({
+function paraAtendimento(linha) {
+  return {
     id: linha.id,
     iniciais: iniciaisDoNome(linha.nome_contato),
     nome: linha.nome_contato || 'Contato sem nome',
@@ -58,7 +50,40 @@ export async function buscarHistoricoAtendimentos() {
     totalMensagens: linha.total_mensagens ?? 0,
     tempoResposta: Number(linha.tempo_resposta_medio_seg ?? 0),
     status: statusAtendimento[linha.status] ? linha.status : 'em_andamento',
-  }))
+  }
+}
+
+export async function buscarHistoricoAtendimentos() {
+  const { data, error } = await supabase
+    .from('vw_historico_atendimentos')
+    .select('*')
+    .order('iniciada_em', { ascending: false })
+    .limit(LIMITE_HISTORICO)
+
+  if (error) throw error
+  return (data ?? []).map(paraAtendimento)
+}
+
+export async function buscarAguardandoAtendente(limite = 5) {
+  const { data, error } = await supabase
+    .from('vw_historico_atendimentos')
+    .select('*')
+    .eq('status', 'encaminhada')
+    .order('iniciada_em', { ascending: false })
+    .limit(limite)
+
+  if (error) throw error
+  return (data ?? []).map(paraAtendimento)
+}
+
+export async function contarAguardandoAtendente() {
+  const { count, error } = await supabase
+    .from('vw_historico_atendimentos')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'encaminhada')
+
+  if (error) throw error
+  return count ?? 0
 }
 
 export async function buscarMensagensConversa(conversaId) {

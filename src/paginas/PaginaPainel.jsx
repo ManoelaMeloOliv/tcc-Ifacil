@@ -1,70 +1,120 @@
 import { useCallback, useState } from 'react'
 import { AvisoConsulta } from '../componentes/interface/AvisoConsulta'
 import { useConsulta } from '../componentes/interface/useConsulta'
+import { CabecalhoPagina } from '../componentes/painel/CabecalhoPagina'
 import { CartaoMetrica } from '../componentes/painel/CartaoMetrica'
 import { DistribuicaoTemas } from '../componentes/painel/DistribuicaoTemas'
 import { GraficoContatos } from '../componentes/painel/GraficoContatos'
-import { IconeConfirmado, IconeConversa, IconeRelogio, IconePergunta } from '../componentes/painel/IconesPainel'
+import { IconeConfirmado, IconeConversa, IconePergunta, IconeRelogio } from '../componentes/painel/IconesPainel'
 import { LayoutPainel } from '../componentes/painel/LayoutPainel'
+import { ListaAguardando } from '../componentes/painel/ListaAguardando'
 import { PerguntasFrequentes } from '../componentes/painel/PerguntasFrequentes'
+import { buscarAguardandoAtendente } from '../servicos/historico'
 import { buscarDistribuicaoTemas, buscarEstatisticasMensais, buscarPerguntasFrequentes } from '../servicos/painel'
 
 const formatadorNumero = new Intl.NumberFormat('pt-BR')
+
+function variacaoPercentual(atual, anterior) {
+  if (!anterior) return null
+  return ((atual - anterior) / anterior) * 100
+}
+
+function taxaResolucaoDoMes(mes) {
+  return mes.atendimentos ? (mes.resolvidos / mes.atendimentos) * 100 : 0
+}
+
+function virgula(numero, casas = 1) {
+  return numero.toFixed(casas).replace('.', ',')
+}
 
 export function PaginaPainel() {
   const estatisticas = useConsulta(buscarEstatisticasMensais, [])
   const meses = estatisticas.dados
   const [chaveSelecionada, definirChaveSelecionada] = useState(null)
-  const mesSelecionado = meses.find((item) => item.anoMes === chaveSelecionada) ?? meses.at(-1)
+  const indice = chaveSelecionada ? meses.findIndex((item) => item.anoMes === chaveSelecionada) : meses.length - 1
+  const mesSelecionado = meses[indice] ?? meses.at(-1)
   const anoMes = mesSelecionado?.anoMes
 
   const temas = useConsulta(useCallback(() => buscarDistribuicaoTemas(anoMes), [anoMes]), [])
   const perguntas = useConsulta(useCallback(() => buscarPerguntasFrequentes(anoMes), [anoMes]), [])
+  const aguardando = useConsulta(useCallback(() => buscarAguardandoAtendente(5), []), [])
+
+  const cabecalho = (
+    <CabecalhoPagina
+      titulo="Olá, Administrador"
+      descricao={mesSelecionado ? `Como o AIFÁCIL se saiu em ${mesSelecionado.mesCompleto.toLowerCase()}. Clique em uma barra do gráfico para ver outro mês.` : 'Resumo do atendimento no WhatsApp.'}
+    />
+  )
 
   if (!mesSelecionado) {
     return (
-      <LayoutPainel>
+      <LayoutPainel cabecalho={cabecalho}>
         <AvisoConsulta carregando={estatisticas.carregando} erro={estatisticas.erro} aoTentarNovamente={estatisticas.recarregar}>
-          <p className="py-12 text-center text-sm text-slate-400">Ainda não há atendimentos registrados.</p>
+          <p className="cartao py-12 text-center text-sm text-slate-500">Ainda não há atendimentos registrados.</p>
         </AvisoConsulta>
       </LayoutPainel>
     )
   }
 
-  const taxaResolucao = mesSelecionado.atendimentos ? (mesSelecionado.resolvidos / mesSelecionado.atendimentos) * 100 : 0
+  const anterior = meses[indice - 1]
+    const nomeMes = mesSelecionado.mesCompleto.toLowerCase()
+  const taxaResolucao = taxaResolucaoDoMes(mesSelecionado)
+  const legendaComparacao = anterior ? `vs. ${anterior.mesCompleto.toLowerCase()}` : 'primeiro mês registrado'
 
   return (
-    <LayoutPainel>
-      <div className="mb-7 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
-        <div><p className="text-sm font-semibold text-emerald-700">VISÃO GERAL · {mesSelecionado.mesCompleto.toUpperCase()}</p><h1 className="mt-1 text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">Olá, Administrador!</h1><p className="mt-2 text-sm text-slate-500">Analisando o desempenho do iFácil em {mesSelecionado.mesCompleto}.</p></div>
-        <div className="rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-right"><p className="text-xs text-emerald-600">Período selecionado</p><p className="text-sm font-bold text-emerald-800">{mesSelecionado.mesCompleto}</p></div>
-      </div>
-
+    <LayoutPainel cabecalho={cabecalho}>
       <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4" aria-label="Indicadores principais">
-        <CartaoMetrica titulo={`Perguntas em ${mesSelecionado.mes}`} valor={formatadorNumero.format(mesSelecionado.perguntas)} detalhe="Perguntas recebidas durante o mês" icone={IconePergunta} />
-        <CartaoMetrica titulo={`Atendimentos em ${mesSelecionado.mes}`} valor={formatadorNumero.format(mesSelecionado.atendimentos)} detalhe={`${formatadorNumero.format(mesSelecionado.contatos)} pessoas entraram em contato`} icone={IconeConversa} destaque="cinza" />
-        <CartaoMetrica titulo="Resolvidos pelo bot" valor={formatadorNumero.format(mesSelecionado.resolvidos)} detalhe={`${taxaResolucao.toFixed(1).replace('.', ',')}% sem atendimento humano`} icone={IconeConfirmado} />
-        <CartaoMetrica titulo="Tempo de resposta" valor={`${mesSelecionado.tempoResposta.toFixed(1).replace('.', ',')}s`} detalhe={`Média de resposta em ${mesSelecionado.mesCompleto}`} icone={IconeRelogio} destaque="vermelho" />
+        <CartaoMetrica
+          titulo="Atendimentos"
+          icone={IconeConversa}
+          selo={mesSelecionado.mes}
+          valor={formatadorNumero.format(mesSelecionado.atendimentos)}
+          variacao={anterior ? variacaoPercentual(mesSelecionado.atendimentos, anterior.atendimentos) : null}
+          legenda={legendaComparacao}
+        />
+        <CartaoMetrica
+          titulo="Perguntas"
+          icone={IconePergunta}
+          selo={mesSelecionado.mes}
+          valor={formatadorNumero.format(mesSelecionado.perguntas)}
+          variacao={anterior ? variacaoPercentual(mesSelecionado.perguntas, anterior.perguntas) : null}
+          legenda={legendaComparacao}
+        />
+        <CartaoMetrica
+          titulo="Resolvidos"
+          icone={IconeConfirmado}
+          selo={mesSelecionado.mes}
+          valor={virgula(taxaResolucao)}
+          unidade="%"
+          variacao={anterior ? variacaoPercentual(taxaResolucao, taxaResolucaoDoMes(anterior)) : null}
+          legenda={`vs. ${anterior ? anterior.mesCompleto.toLowerCase() : "mês anterior"} · ${formatadorNumero.format(mesSelecionado.resolvidos)} sem atendente`}
+        />
+        <CartaoMetrica
+          titulo="Tempo médio"
+          icone={IconeRelogio}
+          selo={mesSelecionado.mes}
+          valor={virgula(mesSelecionado.tempoResposta)}
+          unidade="s"
+          variacao={anterior ? variacaoPercentual(mesSelecionado.tempoResposta, anterior.tempoResposta) : null}
+          menorEMelhor
+          legenda={legendaComparacao}
+        />
       </section>
 
-      <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.8fr)_minmax(320px,0.8fr)]">
+      <section className="grid gap-5 xl:grid-cols-[minmax(0,1.9fr)_minmax(300px,1fr)]">
         <GraficoContatos meses={meses} mesSelecionado={mesSelecionado} aoSelecionarMes={(item) => definirChaveSelecionada(item.anoMes)} />
-        <AvisoConsulta carregando={temas.carregando} erro={temas.erro} aoTentarNovamente={temas.recarregar}>
-          <DistribuicaoTemas temas={temas.dados} nomeMes={mesSelecionado.mesCompleto} />
+        <AvisoConsulta carregando={aguardando.carregando} erro={aguardando.erro} aoTentarNovamente={aguardando.recarregar}>
+          <ListaAguardando atendimentos={aguardando.dados} />
         </AvisoConsulta>
       </section>
 
-      <section className="mt-5 grid gap-5 xl:grid-cols-[minmax(0,1.25fr)_minmax(300px,0.75fr)]">
-        <AvisoConsulta carregando={perguntas.carregando} erro={perguntas.erro} aoTentarNovamente={perguntas.recarregar}>
-          <PerguntasFrequentes perguntas={perguntas.dados} nomeMes={mesSelecionado.mesCompleto} />
+      <section className="grid gap-5 xl:grid-cols-2">
+        <AvisoConsulta carregando={temas.carregando} erro={temas.erro} aoTentarNovamente={temas.recarregar}>
+          <DistribuicaoTemas temas={temas.dados} nomeMes={nomeMes} />
         </AvisoConsulta>
-        <article className="relative overflow-hidden rounded-2xl bg-emerald-900 p-6 text-white shadow-sm">
-          <div className="absolute -bottom-20 -right-20 h-56 w-56 rounded-full border-[40px] border-emerald-700/40" />
-          <p className="relative text-sm font-semibold text-emerald-200">Eficiência do iFácil</p>
-          <p className="relative mt-3 text-5xl font-bold tracking-tight">{taxaResolucao.toFixed(1).replace('.', ',')}%</p>
-          <p className="relative mt-3 max-w-sm text-sm leading-6 text-emerald-100/70">dos atendimentos de {mesSelecionado.mesCompleto} foram concluídos pelo bot sem precisar encaminhar para uma pessoa.</p>
-          <div className="relative mt-6 h-2 overflow-hidden rounded-full bg-emerald-950"><div className="h-full rounded-full bg-emerald-400 transition-[width] duration-300" style={{ width: `${taxaResolucao}%` }} /></div>
-        </article>
+        <AvisoConsulta carregando={perguntas.carregando} erro={perguntas.erro} aoTentarNovamente={perguntas.recarregar}>
+          <PerguntasFrequentes perguntas={perguntas.dados} nomeMes={nomeMes} />
+        </AvisoConsulta>
       </section>
     </LayoutPainel>
   )

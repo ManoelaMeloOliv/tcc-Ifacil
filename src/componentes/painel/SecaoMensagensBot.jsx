@@ -23,7 +23,7 @@ function CartaoMensagem({ mensagem, aoSalvar }) {
   }
 
   return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm">
+    <article className="cartao p-5">
       <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h3 className="text-sm font-bold text-slate-800">{mensagem.titulo}</h3>
@@ -38,16 +38,16 @@ function CartaoMensagem({ mensagem, aoSalvar }) {
         value={texto}
         onChange={(event) => setTexto(event.target.value)}
         rows={Math.min(12, Math.max(3, texto.split('\n').length + 1))}
-        className="mt-4 w-full resize-y rounded-xl border border-slate-200 px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        className="mt-4 w-full resize-y rounded-lg border border-slate-200 px-4 py-3 text-sm leading-6 text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
       />
 
       <div className="mt-3 flex flex-wrap items-center justify-between gap-3">
         <p className="text-xs text-slate-400">Use *texto* para negrito no WhatsApp.</p>
         <div className="flex gap-2">
           {alterado && (
-            <button type="button" onClick={() => setTexto(mensagem.texto)} disabled={salvando} className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">Desfazer</button>
+            <button type="button" onClick={() => setTexto(mensagem.texto)} disabled={salvando} className="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 transition hover:bg-slate-50">Desfazer</button>
           )}
-          <button type="button" onClick={salvar} disabled={!alterado || !texto.trim() || salvando} className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" onClick={salvar} disabled={!alterado || !texto.trim() || salvando} className="rounded-lg bg-emerald-400 px-4 py-2 text-xs font-semibold text-ink transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50">
             {salvando ? 'Salvando...' : 'Salvar'}
           </button>
         </div>
@@ -67,9 +67,9 @@ export function SecaoMensagensBot() {
   }
 
   return (
-    <section className="mt-10" aria-labelledby="titulo-mensagens-bot">
+    <section id="painel-mensagens" role="tabpanel" aria-labelledby="aba-mensagens">
       <div className="mb-4">
-        <h2 id="titulo-mensagens-bot" className="text-lg font-bold text-slate-900">Mensagens do bot</h2>
+        <h2 id="titulo-mensagens-bot" className="titulo-display text-lg text-slate-900">Mensagens do bot</h2>
         <p className="mt-1 text-sm text-slate-500">Textos fixos enviados pelo assistente no WhatsApp. As alterações valem a partir da próxima mensagem recebida.</p>
       </div>
 

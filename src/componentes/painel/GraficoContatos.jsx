@@ -1,8 +1,14 @@
+import { useTema } from '../interface/useTema'
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, XAxis, YAxis } from 'recharts'
 
 const formatadorNumero = new Intl.NumberFormat('pt-BR')
 
 export function GraficoContatos({ meses, mesSelecionado, aoSelecionarMes }) {
+  const { escuro } = useTema()
+  const cores = escuro
+    ? { grade: '#1b3d3c', eixoX: '#9fb8b2', eixoY: '#7d9b95', barra: '#2f5c58' }
+    : { grade: '#e3ece7', eixoX: '#587068', eixoY: '#7d8f89', barra: '#bdd5cd' }
+
   function selecionarMes(dadosBarra) {
     if (dadosBarra?.payload) {
       aoSelecionarMes(dadosBarra.payload)
@@ -10,25 +16,28 @@ export function GraficoContatos({ meses, mesSelecionado, aoSelecionarMes }) {
   }
 
   return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm sm:p-6">
+    <article className="cartao p-5 sm:p-6">
       <div className="flex flex-col justify-between gap-2 sm:flex-row sm:items-start">
         <div>
-          <h2 className="font-bold text-slate-900">Contatos por mês</h2>
+          <h2 className="titulo-display text-base text-slate-900">Contatos por mês</h2>
           <p className="mt-1 text-sm text-slate-500">Clique em uma barra para analisar o período</p>
         </div>
-        <span className="w-fit rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700">Últimos 12 meses</span>
+        <div className="text-right">
+          <p className="numero-display text-xl text-slate-900">{formatadorNumero.format(mesSelecionado.contatos)}</p>
+          <p className="mt-0.5 text-xs text-slate-500">contatos em {mesSelecionado.mesCompleto.toLowerCase()}</p>
+        </div>
       </div>
 
-      <div className="mt-6 h-72 w-full">
+      <div className="mt-6 h-64 w-full">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={meses} margin={{ top: 8, right: 4, left: -22, bottom: 0 }}>
-            <CartesianGrid strokeDasharray="4 4" vertical={false} stroke="#e2e8f0" />
-            <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{ fill: '#64748b', fontSize: 12 }} />
-            <YAxis axisLine={false} tickLine={false} allowDecimals={false} tick={{ fill: '#94a3b8', fontSize: 11 }} />
+            <CartesianGrid vertical={false} stroke={cores.grade} />
+            <XAxis dataKey="mes" axisLine={false} tickLine={false} tick={{ fill: cores.eixoX, fontSize: 12 }} />
+            <YAxis axisLine={false} tickLine={false} allowDecimals={false} tick={{ fill: cores.eixoY, fontSize: 11 }} />
             <Bar
               dataKey="contatos"
-              radius={[7, 7, 2, 2]}
-              maxBarSize={34}
+              radius={[4, 4, 0, 0]}
+              maxBarSize={28}
               className="cursor-pointer"
               activeBar={false}
               isAnimationActive={false}
@@ -37,7 +46,7 @@ export function GraficoContatos({ meses, mesSelecionado, aoSelecionarMes }) {
               {meses.map((item) => (
                 <Cell
                   key={item.anoMes}
-                  fill={item.anoMes === mesSelecionado.anoMes ? '#dc2626' : '#059669'}
+                  fill={item.anoMes === mesSelecionado.anoMes ? '#38a848' : cores.barra}
                 />
               ))}
             </Bar>
@@ -45,12 +54,10 @@ export function GraficoContatos({ meses, mesSelecionado, aoSelecionarMes }) {
         </ResponsiveContainer>
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3 rounded-xl border border-slate-100 bg-slate-50 p-4 sm:grid-cols-4" aria-live="polite">
-        <div><p className="text-xs text-slate-500">Mês selecionado</p><p className="mt-1 text-sm font-bold text-slate-900">{mesSelecionado.mesCompleto}</p></div>
-        <div><p className="text-xs text-slate-500">Contatos</p><p className="mt-1 text-sm font-bold text-slate-900">{formatadorNumero.format(mesSelecionado.contatos)}</p></div>
-        <div><p className="text-xs text-slate-500">Perguntas</p><p className="mt-1 text-sm font-bold text-slate-900">{formatadorNumero.format(mesSelecionado.perguntas)}</p></div>
-        <div><p className="text-xs text-slate-500">Resolvidos pelo bot</p><p className="mt-1 text-sm font-bold text-emerald-700">{formatadorNumero.format(mesSelecionado.resolvidos)}</p></div>
-      </div>
+      <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-600">
+        <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-sky-300" />Outros meses</li>
+        <li className="flex items-center gap-2"><span className="h-2.5 w-2.5 rounded-full bg-emerald-400" />Mês selecionado: {mesSelecionado.mesCompleto}</li>
+      </ul>
     </article>
   )
 }

@@ -9,7 +9,7 @@ function LinhaAssunto({ categoria, posicao, numeroMenu, total, perguntas, ocupad
   const motivoBloqueio = categoria.nativa ? 'Assunto padrão do sistema: pode ser renomeado, mas não excluído' : 'Mova ou exclua as perguntas antes de excluir o assunto'
 
   return (
-    <li className="flex flex-wrap items-center gap-3 px-5 py-3">
+    <li className="flex flex-wrap items-center gap-x-3 gap-y-2 px-4 py-3 sm:px-5">
       <span className="w-6 text-sm font-bold text-slate-400">{numeroMenu ?? '–'}</span>
       <label htmlFor={`assunto-${categoria.id}`} className="sr-only">Nome do assunto</label>
       <input
@@ -17,11 +17,11 @@ function LinhaAssunto({ categoria, posicao, numeroMenu, total, perguntas, ocupad
         value={nome}
         onChange={(evento) => setNome(evento.target.value)}
         maxLength={40}
-        className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+        className="min-w-[10rem] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
       />
       <span className="text-xs text-slate-400">{perguntas === 0 ? 'Fora do menu: sem perguntas ativas' : `${perguntas} ${perguntas === 1 ? 'pergunta ativa' : 'perguntas ativas'}`}</span>
       {alterado && (
-        <button type="button" onClick={() => aoRenomear(categoria, nome.trim())} disabled={ocupado || !nome.trim()} className="rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:opacity-50">Salvar</button>
+        <button type="button" onClick={() => aoRenomear(categoria, nome.trim())} disabled={ocupado || !nome.trim()} className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-semibold text-ink transition hover:bg-emerald-300 disabled:opacity-50">Salvar</button>
       )}
       <div className="flex gap-1">
         <button type="button" onClick={() => aoMover(posicao - 1, -1)} disabled={ocupado || posicao === 1} className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-700 disabled:opacity-30" aria-label={`Subir ${categoria.nome}`}><IconeSetaCima className="h-4 w-4" /></button>
@@ -73,13 +73,13 @@ export function SecaoAssuntos({ categorias, respostas, aoAlterar }) {
   }
 
   return (
-    <section className="mt-10" aria-labelledby="titulo-assuntos">
+    <section id="painel-assuntos" role="tabpanel" aria-labelledby="aba-assuntos">
       <div className="mb-4">
-        <h2 id="titulo-assuntos" className="text-lg font-bold text-slate-900">Assuntos do menu</h2>
+        <h2 id="titulo-assuntos" className="titulo-display text-lg text-slate-900">Assuntos do menu</h2>
         <p className="mt-1 text-sm text-slate-500">Os assuntos aparecem no WhatsApp nesta ordem. Assunto sem pergunta ativa fica fora do menu, e a numeração é ajustada sozinha.</p>
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm">
+      <div className="overflow-hidden cartao">
         <ol className="divide-y divide-slate-100">
           {categorias.map((categoria, indice) => (
             <LinhaAssunto
@@ -97,7 +97,7 @@ export function SecaoAssuntos({ categorias, respostas, aoAlterar }) {
           ))}
         </ol>
 
-        <form onSubmit={criarNovoAssunto} className="flex flex-wrap gap-3 border-t border-slate-100 bg-slate-50/70 px-5 py-4">
+        <form onSubmit={criarNovoAssunto} className="flex flex-wrap gap-3 border-t border-emerald-100 bg-emerald-50 px-4 py-4 sm:px-5">
           <label htmlFor="novo-assunto" className="sr-only">Novo assunto</label>
           <input
             id="novo-assunto"
@@ -105,9 +105,9 @@ export function SecaoAssuntos({ categorias, respostas, aoAlterar }) {
             onChange={(evento) => setNovo(evento.target.value)}
             maxLength={40}
             placeholder="Nome do novo assunto"
-            className="min-w-0 flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
+            className="min-w-[10rem] flex-1 rounded-lg border border-slate-200 px-3 py-2 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
           />
-          <button type="submit" disabled={ocupado || !novo.trim()} className="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="submit" disabled={ocupado || !novo.trim()} className="inline-flex items-center gap-2 rounded-lg bg-emerald-400 px-4 py-2 text-xs font-semibold text-ink transition hover:bg-emerald-300 disabled:cursor-not-allowed disabled:opacity-50">
             <IconeMais className="h-4 w-4" />Adicionar assunto
           </button>
         </form>

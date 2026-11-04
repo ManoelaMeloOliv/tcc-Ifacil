@@ -1,24 +1,32 @@
 import { createElement } from 'react'
 
-export function CartaoMetrica({ titulo, valor, detalhe, icone, destaque = 'verde' }) {
-  const destaques = {
-    verde: 'bg-emerald-50 text-emerald-700',
-    vermelho: 'bg-red-50 text-red-600',
-    cinza: 'bg-slate-100 text-slate-600',
-  }
+export function CartaoMetrica({ titulo, valor, unidade, selo, variacao, legenda, icone, menorEMelhor = false }) {
+  const temVariacao = variacao !== null && variacao !== undefined
+  const boa = temVariacao && (menorEMelhor ? variacao <= 0 : variacao >= 0)
 
   return (
-    <article className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <p className="text-sm font-medium text-slate-500">{titulo}</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-slate-900">{valor}</p>
-        </div>
-        <span className={`flex h-11 w-11 items-center justify-center rounded-xl ${destaques[destaque]}`}>
-          {createElement(icone, { className: 'h-5 w-5' })}
+    <article className="cartao cartao-verde p-5">
+      <div className="flex items-center gap-3">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-400 text-ink">
+          {createElement(icone, { className: 'h-[18px] w-[18px]' })}
         </span>
+        <p className="min-w-0 flex-1 truncate text-sm font-medium text-slate-700">{titulo}</p>
+        {selo && <span className="rounded-md bg-superficie px-2 py-1 text-xs font-medium text-slate-500">{selo}</span>}
       </div>
-      <p className="mt-4 text-xs leading-5 text-slate-500">{detalhe}</p>
+
+      <p className="numero-display mt-6 text-[2rem] text-slate-900">
+        {valor}
+        {unidade && <span className="ml-1.5 text-base font-medium tracking-normal text-slate-500">{unidade}</span>}
+      </p>
+
+      <div className="mt-3 flex min-h-12 flex-wrap content-start items-start gap-x-2 gap-y-1 text-xs text-slate-600">
+        {temVariacao && (
+          <span className={`rounded-md px-1.5 py-0.5 font-semibold ${boa ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}`}>
+            {variacao >= 0 ? '+' : ''}{variacao.toFixed(1).replace('.', ',')}%
+          </span>
+        )}
+        <span className="py-0.5">{legenda}</span>
+      </div>
     </article>
   )
 }

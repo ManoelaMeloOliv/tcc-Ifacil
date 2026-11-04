@@ -72,7 +72,7 @@ export function FormularioLogin() {
       />
 
       {erro && (
-        <p role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm font-medium text-red-600 ring-1 ring-inset ring-red-100">
+        <p role="alert" className="rounded-lg bg-red-50 px-4 py-3 text-sm font-medium text-red-600">
           {erro}
         </p>
       )}
@@ -95,7 +95,7 @@ export function FormularioLogin() {
       <button
         type="submit"
         disabled={enviando}
-        className="mt-2 flex h-13 w-full items-center justify-center gap-3 rounded-xl bg-emerald-600 px-5 font-semibold text-white shadow-lg shadow-emerald-700/20 transition hover:-translate-y-0.5 hover:bg-emerald-700 hover:shadow-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/30 active:translate-y-0 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
+        className="mt-2 flex h-13 w-full items-center justify-center gap-3 rounded-lg bg-emerald-400 px-5 font-semibold text-ink transition hover:bg-emerald-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-emerald-500/30 disabled:cursor-not-allowed disabled:opacity-60"
       >
         {enviando && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />}
         {enviando ? 'Entrando...' : 'Entrar no painel'}

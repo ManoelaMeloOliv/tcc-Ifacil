@@ -1,20 +1,5 @@
-export function LogoMarca({ claro = false }) {
-  const corTexto = claro ? 'text-white' : 'text-slate-900'
+import logo from '../../assets/logo-aifacil.png'
 
-  return (
-    <div className="inline-flex items-center gap-3" aria-label="iFácil">
-      <div className="grid grid-cols-2 gap-1" aria-hidden="true">
-        <span className="h-3 w-3 rounded-full bg-red-500" />
-        <span className="h-3 w-3 rounded-sm bg-emerald-500" />
-        <span className="h-3 w-3 rounded-sm bg-emerald-500" />
-        <span className="h-3 w-3 rounded-sm bg-emerald-500" />
-        <span className="h-3 w-3 rounded-sm bg-emerald-500" />
-        <span className="h-3 w-3 rounded-sm bg-emerald-500" />
-      </div>
-
-      <div className={`text-2xl font-extrabold tracking-tight ${corTexto}`}>
-        i<span className="text-emerald-500">Fácil</span>
-      </div>
-    </div>
-  )
+export function LogoMarca({ altura = 44 }) {
+  return <img src={logo} alt="AIFÁCIL" style={{ height: altura }} className="logo-marca block w-auto max-w-full box-content" />
 }
