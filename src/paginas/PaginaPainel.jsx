@@ -16,17 +16,25 @@ import { buscarDistribuicaoTemas, buscarEstatisticasMensais, buscarPerguntasFreq
 
 const formatadorNumero = new Intl.NumberFormat('pt-BR')
 
-function variacaoPercentual(atual, anterior) {
-  if (!anterior) return null
-  return ((atual - anterior) / anterior) * 100
-}
-
 function taxaResolucaoDoMes(mes) {
   return mes.atendimentos ? (mes.resolvidos / mes.atendimentos) * 100 : 0
 }
 
 function virgula(numero, casas = 1) {
   return numero.toFixed(casas).replace('.', ',')
+}
+
+// Compara com o período anterior em números, não em porcentagem:
+// selo "+3" e legenda "em outubro eram 4".
+function comparar(valorAtual, valorAnterior, { quando, casas = 0, unidade = '', unidadeDiferenca = unidade, singular = false }) {
+  if (valorAnterior === null || valorAnterior === undefined) return { legenda: `sem dados ${quando}` }
+  const formatar = (numero) => (casas ? virgula(numero, casas) : formatadorNumero.format(Math.round(numero)))
+  const diferenca = Number((valorAtual - valorAnterior).toFixed(casas))
+  return {
+    sinal: diferenca,
+    diferenca: diferenca === 0 ? 'igual' : `${diferenca > 0 ? '+' : '−'}${formatar(Math.abs(diferenca))}${unidadeDiferenca}`,
+    legenda: `${quando} ${singular ? 'era' : 'eram'} ${formatar(valorAnterior)}${unidade}`,
+  }
 }
 
 const UM_DIA_MS = 24 * 60 * 60 * 1000
@@ -67,7 +75,7 @@ export function PaginaPainel() {
     <CabecalhoPagina
       titulo="Olá, Administrador"
       descricao={filtrandoDia
-        ? `Como o AIFÁCIL se saiu em ${descreverPeriodo(periodo)}. Escolha "Todos os dias" para voltar à visão por mês.`
+        ? `Como o AIFÁCIL se saiu em ${descreverPeriodo(periodo)}. Escolha "Por mês" para voltar à visão mensal.`
         : mesSelecionado ? `Como o AIFÁCIL se saiu em ${mesSelecionado.mesCompleto.toLowerCase()}. Clique em uma barra do gráfico para ver outro mês.` : 'Resumo do atendimento no WhatsApp.'}
     />
   )
@@ -86,8 +94,7 @@ export function PaginaPainel() {
   const anterior = filtrandoDia ? resumoAnterior.dados : meses[indice - 1]
   const nomePeriodo = filtrandoDia ? descreverPeriodo(periodo) : mesSelecionado.mesCompleto.toLowerCase()
   const selo = filtrandoDia ? descreverPeriodo({ dia: periodo.dia }) : mesSelecionado.mes
-  const nomeAnterior = filtrandoDia ? 'dia anterior' : anterior?.mesCompleto.toLowerCase()
-  const legendaComparacao = anterior || filtrandoDia ? `vs. ${nomeAnterior ?? 'dia anterior'}` : 'primeiro mês registrado'
+  const quando = filtrandoDia ? 'no dia anterior' : anterior ? `em ${anterior.mesCompleto.toLowerCase()}` : 'do mês anterior'
   const listaTemas = filtrandoDia ? (resumo.dados?.temas ?? []) : temas.dados
   const listaPerguntas = filtrandoDia ? (resumo.dados?.frequentes ?? []) : perguntas.dados
   const consultaTemas = filtrandoDia ? resumo : temas
@@ -111,6 +118,12 @@ export function PaginaPainel() {
   }
 
   const taxaResolucao = taxaResolucaoDoMes(atual)
+  const comparacao = {
+    atendimentos: comparar(atual.atendimentos, anterior?.atendimentos, { quando }),
+    perguntas: comparar(atual.perguntas, anterior?.perguntas, { quando }),
+    resolvidos: comparar(taxaResolucao, anterior ? taxaResolucaoDoMes(anterior) : null, { quando, casas: 1, unidade: '%', unidadeDiferenca: ' pontos', singular: true }),
+    tempo: comparar(atual.tempoResposta, anterior?.tempoResposta, { quando, casas: 1, unidade: ' s', singular: true }),
+  }
 
   return (
     <LayoutPainel cabecalho={cabecalho}>
@@ -121,16 +134,14 @@ export function PaginaPainel() {
           icone={IconeConversa}
           selo={selo}
           valor={formatadorNumero.format(atual.atendimentos)}
-          variacao={anterior ? variacaoPercentual(atual.atendimentos, anterior.atendimentos) : null}
-          legenda={legendaComparacao}
+          {...comparacao.atendimentos}
         />
         <CartaoMetrica
           titulo="Perguntas"
           icone={IconePergunta}
           selo={selo}
           valor={formatadorNumero.format(atual.perguntas)}
-          variacao={anterior ? variacaoPercentual(atual.perguntas, anterior.perguntas) : null}
-          legenda={legendaComparacao}
+          {...comparacao.perguntas}
         />
         <CartaoMetrica
           titulo="Resolvidos"
@@ -138,8 +149,8 @@ export function PaginaPainel() {
           selo={selo}
           valor={virgula(taxaResolucao)}
           unidade="%"
-          variacao={anterior ? variacaoPercentual(taxaResolucao, taxaResolucaoDoMes(anterior)) : null}
-          legenda={`vs. ${anterior ? nomeAnterior : 'mês anterior'} · ${formatadorNumero.format(atual.resolvidos)} sem atendente`}
+          {...comparacao.resolvidos}
+          detalhe={`${formatadorNumero.format(atual.resolvidos)} de ${formatadorNumero.format(atual.atendimentos)} resolvidos só pelo bot`}
         />
         <CartaoMetrica
           titulo="Tempo médio"
@@ -147,9 +158,8 @@ export function PaginaPainel() {
           selo={selo}
           valor={virgula(atual.tempoResposta)}
           unidade="s"
-          variacao={anterior ? variacaoPercentual(atual.tempoResposta, anterior.tempoResposta) : null}
+          {...comparacao.tempo}
           menorEMelhor
-          legenda={legendaComparacao}
         />
       </section>
 

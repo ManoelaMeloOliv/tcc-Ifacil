@@ -1,8 +1,11 @@
 import { createElement } from 'react'
 
-export function CartaoMetrica({ titulo, valor, unidade, selo, variacao, legenda, icone, menorEMelhor = false }) {
-  const temVariacao = variacao !== null && variacao !== undefined
-  const boa = temVariacao && (menorEMelhor ? variacao <= 0 : variacao >= 0)
+// diferenca: quanto mudou em relação ao período anterior, já formatada (ex.: "+3", "-9,4 s").
+// sinal: número usado só para decidir a cor (positivo, negativo ou zero).
+export function CartaoMetrica({ titulo, valor, unidade, selo, diferenca, sinal = 0, legenda, detalhe, icone, menorEMelhor = false }) {
+  const neutra = !sinal
+  const boa = menorEMelhor ? sinal < 0 : sinal > 0
+  const cor = neutra ? 'bg-superficie text-slate-600' : boa ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'
 
   return (
     <article className="cartao cartao-verde p-5">
@@ -19,13 +22,12 @@ export function CartaoMetrica({ titulo, valor, unidade, selo, variacao, legenda,
         {unidade && <span className="ml-1.5 text-base font-medium tracking-normal text-slate-500">{unidade}</span>}
       </p>
 
-      <div className="mt-3 flex min-h-12 flex-wrap content-start items-start gap-x-2 gap-y-1 text-xs text-slate-600">
-        {temVariacao && (
-          <span className={`rounded-md px-1.5 py-0.5 font-semibold ${boa ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-700'}`}>
-            {variacao >= 0 ? '+' : ''}{variacao.toFixed(1).replace('.', ',')}%
-          </span>
-        )}
-        <span className="py-0.5">{legenda}</span>
+      <div className="mt-3 flex min-h-12 flex-col gap-1 text-xs text-slate-600">
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {diferenca && <span className={`rounded-md px-1.5 py-0.5 font-semibold ${cor}`}>{diferenca}</span>}
+          {legenda && <span>{legenda}</span>}
+        </div>
+        {detalhe && <span className="text-slate-500">{detalhe}</span>}
       </div>
     </article>
   )
