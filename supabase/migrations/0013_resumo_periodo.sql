@@ -1,5 +1,21 @@
 -- Indicadores da Visão geral para um intervalo qualquer (filtro de dia e hora do painel).
--- Mesmas regras das views mensais da 0004. Idempotente.
+-- Idempotente.
+
+-- Tempo de resposta do bot: ignora intervalos acima de 10 minutos. Eles só acontecem
+-- quando a mensagem ficou presa (fila do WhatsApp entregue com atraso, bot fora do ar)
+-- e distorciam a média. Mesmas colunas da 0004, então as views mensais continuam iguais.
+create or replace view public.vw_tempos_resposta with (security_invoker = true) as
+select conversa_id, enviada_em,
+       extract(epoch from enviada_em - anterior_em)::numeric as segundos
+from (
+  select m.conversa_id, m.tipo, m.enviada_em,
+         lag(m.tipo)       over w as anterior_tipo,
+         lag(m.enviada_em) over w as anterior_em
+  from public.mensagens m
+  window w as (partition by m.conversa_id order by m.enviada_em, m.tipo = 'bot')
+) t
+where tipo = 'bot' and anterior_tipo = 'usuario'
+  and enviada_em - anterior_em <= interval '10 minutes';
 
 create or replace function public.painel_resumo_periodo(p_inicio timestamptz, p_fim timestamptz)
 returns jsonb
@@ -8,10 +24,13 @@ stable
 security invoker
 set search_path = public
 as $$
+  -- Conversa conta no período se começou nele ou teve alguma mensagem nele
   with conv as (
     select c.*
     from conversas c
-    where c.iniciada_em >= p_inicio and c.iniciada_em < p_fim
+    where (c.iniciada_em >= p_inicio and c.iniciada_em < p_fim)
+       or exists (select 1 from mensagens m
+                   where m.conversa_id = c.id and m.enviada_em >= p_inicio and m.enviada_em < p_fim)
   ),
   perg as (
     select m.*
@@ -54,3 +73,6 @@ $$;
 
 revoke execute on function public.painel_resumo_periodo(timestamptz, timestamptz) from public, anon;
 grant  execute on function public.painel_resumo_periodo(timestamptz, timestamptz) to authenticated;
+
+-- Faz a API do Supabase enxergar as funções novas na hora
+notify pgrst, 'reload schema';

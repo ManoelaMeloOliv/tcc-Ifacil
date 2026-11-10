@@ -356,3 +356,6 @@ $$;
 
 revoke execute on function public.painel_excluir_conversas(uuid[]) from public, anon;
 grant  execute on function public.painel_excluir_conversas(uuid[]) to authenticated;
+
+-- Faz a API do Supabase enxergar as funções novas na hora
+notify pgrst, 'reload schema';

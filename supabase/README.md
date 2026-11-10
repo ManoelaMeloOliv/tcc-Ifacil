@@ -10,7 +10,7 @@ Algumas funções foram reescritas em migrações novas. A tabela abaixo diz em 
 | `ifacil_texto_menu` | 0012 |
 | `ifacil_assuntos`, `ifacil_perguntas_assunto`, `ifacil_texto_submenu`, `ifacil_rotulo` | 0010 |
 | `registrar_atendimento`, `painel_excluir_conversas` | 0012 |
-| `painel_resumo_periodo` | 0013 |
+| `painel_resumo_periodo`, view `vw_tempos_resposta` | 0013 |
 | `registrar_mensagem_humana`, `ifacil_eh_saudacao` | 0008 |
 | `buscar_resposta_padrao`, `ifacil_normalizar` | 0005 |
 | `painel_finalizar_atendimento` | 0006 |
