@@ -53,12 +53,27 @@ function paraAtendimento(linha) {
   }
 }
 
-export async function buscarHistoricoAtendimentos() {
-  const { data, error } = await supabase
+// Converte o filtro do painel (dia "AAAA-MM-DD" e horas "HH:MM", no fuso do navegador)
+// num intervalo ISO [inicio, fim). Sem dia, não filtra.
+export function intervaloDoFiltro({ dia, horaInicio, horaFim } = {}) {
+  if (!dia) return null
+  const inicio = new Date(`${dia}T${horaInicio || '00:00'}:00`)
+  const fim = new Date(`${dia}T${horaFim || '23:59'}:00`)
+  if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return null
+  fim.setMinutes(fim.getMinutes() + 1)
+  return { inicio: inicio.toISOString(), fim: fim.toISOString() }
+}
+
+export async function buscarHistoricoAtendimentos(intervalo = null) {
+  let consulta = supabase
     .from('vw_historico_atendimentos')
     .select('*')
     .order('iniciada_em', { ascending: false })
     .limit(LIMITE_HISTORICO)
+
+  if (intervalo) consulta = consulta.gte('iniciada_em', intervalo.inicio).lt('iniciada_em', intervalo.fim)
+
+  const { data, error } = await consulta
 
   if (error) throw error
   return (data ?? []).map(paraAtendimento)
@@ -108,4 +123,11 @@ export async function buscarMensagensConversa(conversaId) {
 export async function finalizarAtendimento(conversaId) {
   const { error } = await supabase.rpc('painel_finalizar_atendimento', { p_conversa: conversaId })
   if (error) throw error
+}
+
+export async function excluirConversas(ids) {
+  if (!ids.length) return 0
+  const { data, error } = await supabase.rpc('painel_excluir_conversas', { p_ids: ids })
+  if (error) throw error
+  return data ?? 0
 }

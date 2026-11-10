@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { AvisoConsulta } from '../interface/AvisoConsulta'
 import { useConsulta } from '../interface/useConsulta'
-import { IconeFechar, IconeWhatsApp } from './IconesPainel'
+import { IconeFechar, IconeLixeira, IconeWhatsApp } from './IconesPainel'
 import { finalizarAtendimento, formatarDataAtendimento, buscarMensagensConversa, statusAtendimento } from '../../servicos/historico'
 
 function TextoWhatsApp({ texto }) {
@@ -16,7 +16,7 @@ const estiloMensagem = {
   atendente: { rotulo: 'Secretaria', lado: 'justify-start', balao: 'rounded-tl-sm bg-sky-100 text-slate-800', detalhe: 'text-slate-500' },
 }
 
-export function PainelConversa({ atendimento, aoFechar, aoFinalizar }) {
+export function PainelConversa({ atendimento, aoFechar, aoFinalizar, aoExcluir, excluindo = false }) {
   const mensagens = useConsulta(useCallback(() => buscarMensagensConversa(atendimento.id), [atendimento.id]), [])
   const [finalizando, setFinalizando] = useState(false)
   const [erroFinalizar, setErroFinalizar] = useState(null)
@@ -71,6 +71,11 @@ export function PainelConversa({ atendimento, aoFechar, aoFinalizar }) {
               {aguardando && (
                 <button type="button" onClick={finalizar} disabled={finalizando} className="rounded-lg bg-emerald-400 px-3.5 py-2 text-xs font-semibold text-ink transition hover:bg-emerald-300 disabled:cursor-wait disabled:opacity-60">
                   {finalizando ? 'Salvando...' : 'Marcar como resolvido'}
+                </button>
+              )}
+              {aoExcluir && (
+                <button type="button" onClick={aoExcluir} disabled={excluindo} className="inline-flex items-center gap-2 rounded-lg border border-red-200 px-3.5 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-wait disabled:opacity-60">
+                  <IconeLixeira className="h-4 w-4" />{excluindo ? 'Excluindo...' : 'Excluir conversa'}
                 </button>
               )}
             </div>

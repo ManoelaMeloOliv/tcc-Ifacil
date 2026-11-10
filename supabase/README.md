@@ -1,14 +1,16 @@
 # Banco de dados (Supabase)
 
-As migrações em `migrations/` são a fonte oficial do esquema. Rode no SQL Editor, em ordem, de `0002` a `0011`. A `0001` é só um exemplo. Todas são idempotentes.
+As migrações em `migrations/` são a fonte oficial do esquema. Rode no SQL Editor, em ordem, de `0002` a `0012`. A `0001` é só um exemplo. Todas são idempotentes.
 
 Algumas funções foram reescritas em migrações novas. A tabela abaixo diz em qual arquivo está a versão que vale hoje.
 
 | Objeto | Versão atual em |
 | --- | --- |
-| `ifacil_rotear` | 0010 |
-| `ifacil_assuntos`, `ifacil_perguntas_assunto`, `ifacil_texto_menu`, `ifacil_texto_submenu`, `ifacil_rotulo` | 0010 |
-| `registrar_atendimento`, `registrar_mensagem_humana`, `ifacil_eh_saudacao` | 0008 |
+| `ifacil_rotear` | 0012 |
+| `ifacil_texto_menu` | 0012 |
+| `ifacil_assuntos`, `ifacil_perguntas_assunto`, `ifacil_texto_submenu`, `ifacil_rotulo` | 0010 |
+| `registrar_atendimento`, `painel_excluir_conversas` | 0012 |
+| `registrar_mensagem_humana`, `ifacil_eh_saudacao` | 0008 |
 | `buscar_resposta_padrao`, `ifacil_normalizar` | 0005 |
 | `painel_finalizar_atendimento` | 0006 |
 | `painel_ordenar_respostas`, `painel_ordenar_assuntos` | 0010 |

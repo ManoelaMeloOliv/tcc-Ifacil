@@ -2,7 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('../lib/supabaseClient', () => ({ supabase: null }))
 
-const { formatarDataAtendimento, formatarTelefone, iniciaisDoNome } = await import('./historico')
+const { formatarDataAtendimento, formatarTelefone, iniciaisDoNome, intervaloDoFiltro } = await import('./historico')
 
 describe('formatarTelefone', () => {
   it('formata celular brasileiro com DDI', () => {
@@ -45,5 +45,23 @@ describe('formatarDataAtendimento', () => {
 
   it('formata dia, mês e hora', () => {
     expect(formatarDataAtendimento('2026-11-04T15:30:00')).toBe('04/11 15:30')
+  })
+})
+
+describe('intervaloDoFiltro', () => {
+  it('não filtra sem dia', () => {
+    expect(intervaloDoFiltro({})).toBeNull()
+  })
+
+  it('cobre o dia inteiro quando não há horas', () => {
+    const { inicio, fim } = intervaloDoFiltro({ dia: '2026-11-09' })
+    expect(new Date(fim) - new Date(inicio)).toBe(24 * 60 * 60 * 1000)
+    expect(inicio).toBe(new Date('2026-11-09T00:00:00').toISOString())
+  })
+
+  it('inclui o minuto final da hora escolhida', () => {
+    const { inicio, fim } = intervaloDoFiltro({ dia: '2026-11-09', horaInicio: '14:00', horaFim: '15:30' })
+    expect(inicio).toBe(new Date('2026-11-09T14:00:00').toISOString())
+    expect(fim).toBe(new Date('2026-11-09T15:31:00').toISOString())
   })
 })

@@ -1,11 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { AvisoConsulta } from '../componentes/interface/AvisoConsulta'
 import { CabecalhoPagina, FiltroPilula } from '../componentes/painel/CabecalhoPagina'
 import { useConsulta } from '../componentes/interface/useConsulta'
-import { IconeConversa, IconeSetaDireita, IconeBusca, IconeWhatsApp } from '../componentes/painel/IconesPainel'
+import { IconeConversa, IconeSetaDireita, IconeBusca, IconeWhatsApp, IconeLixeira, IconeCalendario } from '../componentes/painel/IconesPainel'
 import { LayoutPainel } from '../componentes/painel/LayoutPainel'
 import { PainelConversa } from '../componentes/painel/PainelConversa'
-import { formatarDataAtendimento, buscarHistoricoAtendimentos, statusAtendimento } from '../servicos/historico'
+import { formatarDataAtendimento, buscarHistoricoAtendimentos, excluirConversas, intervaloDoFiltro, statusAtendimento } from '../servicos/historico'
 
 const filtrosStatus = [
   { valor: 'todos', rotulo: 'Todos' },
@@ -15,8 +15,31 @@ const filtrosStatus = [
   { valor: 'finalizada', rotulo: 'Finalizados' },
 ]
 
+function diaLocal(deslocamentoDias = 0) {
+  const data = new Date()
+  data.setDate(data.getDate() + deslocamentoDias)
+  const mes = String(data.getMonth() + 1).padStart(2, '0')
+  const dia = String(data.getDate()).padStart(2, '0')
+  return `${data.getFullYear()}-${mes}-${dia}`
+}
+
+const classeCampo = 'rounded-lg border border-slate-200 bg-superficie px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
+const classeAtalho = (ativo) => `rounded-lg px-3 py-2 text-xs font-semibold transition ${ativo ? 'bg-emerald-400 text-ink' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`
+
 export function PaginaHistorico() {
-  const { dados: historico, carregando, erro, recarregar } = useConsulta(buscarHistoricoAtendimentos, [])
+  const [dia, definirDia] = useState('')
+  const [horaInicio, definirHoraInicio] = useState('')
+  const [horaFim, definirHoraFim] = useState('')
+  const intervalo = intervaloDoFiltro({ dia, horaInicio, horaFim })
+  const inicioFiltro = intervalo?.inicio
+  const fimFiltro = intervalo?.fim
+  const consultaHistorico = useCallback(
+    () => buscarHistoricoAtendimentos(inicioFiltro ? { inicio: inicioFiltro, fim: fimFiltro } : null),
+    [inicioFiltro, fimFiltro],
+  )
+  const { dados: historico, carregando, erro, recarregar } = useConsulta(consultaHistorico, [])
+  const [excluindo, definirExcluindo] = useState(false)
+  const [erroExclusao, definirErroExclusao] = useState(null)
   const [busca, definirBusca] = useState('')
   const [filtroStatus, definirFiltroStatus] = useState('todos')
   const [idSelecionado, definirIdSelecionado] = useState(null)
@@ -34,6 +57,28 @@ export function PaginaHistorico() {
       return combinaStatus && combinaBusca
     })
   }, [historico, busca, filtroStatus])
+
+  async function excluir(ids, descricao) {
+    if (!ids.length) return
+    if (!window.confirm(`Excluir ${descricao}? As mensagens são apagadas de vez e não dá para desfazer.`)) return
+    definirExcluindo(true)
+    definirErroExclusao(null)
+    try {
+      await excluirConversas(ids)
+      if (ids.includes(idSelecionado)) definirIdSelecionado(null)
+      recarregar()
+    } catch (falha) {
+      definirErroExclusao(falha.message ?? 'Erro desconhecido')
+    } finally {
+      definirExcluindo(false)
+    }
+  }
+
+  function limparFiltroData() {
+    definirDia('')
+    definirHoraInicio('')
+    definirHoraFim('')
+  }
 
   const contagem = (valor) => (valor === 'todos' ? historico.length : historico.filter((item) => item.status === valor).length)
 
@@ -65,6 +110,37 @@ export function PaginaHistorico() {
               className="w-full rounded-lg border border-slate-200 py-3 pl-11 pr-4 text-sm text-slate-800 outline-none transition placeholder:text-slate-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100"
             />
           </div>
+
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <IconeCalendario className="h-4 w-4 text-slate-400" />
+              <button type="button" onClick={() => definirDia(diaLocal(0))} className={classeAtalho(dia === diaLocal(0))}>Hoje</button>
+              <button type="button" onClick={() => definirDia(diaLocal(-1))} className={classeAtalho(dia === diaLocal(-1))}>Ontem</button>
+              <button type="button" onClick={limparFiltroData} className={classeAtalho(!dia)}>Todos os dias</button>
+            </div>
+            <label className="flex flex-col gap-1 text-xs text-slate-500">
+              Dia
+              <input type="date" value={dia} onChange={(evento) => definirDia(evento.target.value)} className={classeCampo} />
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-slate-500">
+              Das
+              <input type="time" value={horaInicio} onChange={(evento) => definirHoraInicio(evento.target.value)} disabled={!dia} className={`${classeCampo} disabled:opacity-50`} />
+            </label>
+            <label className="flex flex-col gap-1 text-xs text-slate-500">
+              Até
+              <input type="time" value={horaFim} onChange={(evento) => definirHoraFim(evento.target.value)} disabled={!dia} className={`${classeCampo} disabled:opacity-50`} />
+            </label>
+            <button
+              type="button"
+              onClick={() => excluir(atendimentosVisiveis.map((item) => item.id), `${atendimentosVisiveis.length} conversa(s) listada(s)`)}
+              disabled={excluindo || atendimentosVisiveis.length === 0}
+              className="ml-auto inline-flex items-center gap-2 rounded-lg border border-red-200 px-3.5 py-2 text-xs font-semibold text-red-600 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <IconeLixeira className="h-4 w-4" />
+              {excluindo ? 'Excluindo...' : `Excluir ${atendimentosVisiveis.length} listada(s)`}
+            </button>
+          </div>
+          {erroExclusao && <p role="alert" className="text-xs text-red-600">Não foi possível excluir: {erroExclusao}</p>}
         </div>
 
         <div className="overflow-x-auto">
@@ -104,6 +180,9 @@ export function PaginaHistorico() {
                           <IconeWhatsApp className="h-4 w-4" />
                         </a>
                       )}
+                      <button type="button" onClick={(evento) => { evento.stopPropagation(); excluir([item.id], `a conversa com ${item.nome}`) }} disabled={excluindo} className="rounded-lg p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-600 disabled:opacity-50" aria-label={`Excluir conversa com ${item.nome}`} title="Excluir conversa">
+                        <IconeLixeira className="h-4 w-4" />
+                      </button>
                       <button type="button" onClick={(evento) => { evento.stopPropagation(); definirIdSelecionado(item.id) }} className="rounded-lg p-2 text-slate-400 transition hover:bg-slate-100 hover:text-slate-600" aria-label={`Ver conversa com ${item.nome}`} title="Ver conversa">
                         <IconeSetaDireita className="h-4 w-4" />
                       </button>
@@ -123,7 +202,7 @@ export function PaginaHistorico() {
         </div>
 
         <div className="border-t border-slate-100 px-4 py-3.5 text-xs text-slate-400">
-          {atendimentosVisiveis.length} de {historico.length} atendimentos
+          {atendimentosVisiveis.length} de {historico.length} atendimentos{dia ? ' no período filtrado' : ''}
         </div>
       </section>
       </AvisoConsulta>
@@ -134,6 +213,8 @@ export function PaginaHistorico() {
           atendimento={atendimentoSelecionado}
           aoFechar={() => definirIdSelecionado(null)}
           aoFinalizar={recarregar}
+          aoExcluir={() => excluir([atendimentoSelecionado.id], `a conversa com ${atendimentoSelecionado.nome}`)}
+          excluindo={excluindo}
         />
       )}
     </LayoutPainel>
