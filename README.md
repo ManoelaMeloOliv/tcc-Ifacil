@@ -51,7 +51,7 @@ docker compose up -d
 
 ## Banco de dados
 
-Rode no SQL Editor do Supabase, em ordem, as migrações `0002` a `0012` (veja `supabase/README.md`). Todas são idempotentes. Depois, `npm run testar:banco` confere que visitantes sem login não leem nada.
+Rode no SQL Editor do Supabase, em ordem, as migrações `0002` a `0013` (veja `supabase/README.md`). Todas são idempotentes. Depois, `npm run testar:banco` confere que visitantes sem login não leem nada.
 
 ## Scripts
 

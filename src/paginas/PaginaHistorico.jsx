@@ -2,7 +2,9 @@ import { useCallback, useMemo, useState } from 'react'
 import { AvisoConsulta } from '../componentes/interface/AvisoConsulta'
 import { CabecalhoPagina, FiltroPilula } from '../componentes/painel/CabecalhoPagina'
 import { useConsulta } from '../componentes/interface/useConsulta'
-import { IconeConversa, IconeSetaDireita, IconeBusca, IconeWhatsApp, IconeLixeira, IconeCalendario } from '../componentes/painel/IconesPainel'
+import { IconeConversa, IconeSetaDireita, IconeBusca, IconeWhatsApp, IconeLixeira } from '../componentes/painel/IconesPainel'
+import { FiltroPeriodo } from '../componentes/painel/FiltroPeriodo'
+import { periodoVazio } from '../componentes/painel/periodo'
 import { LayoutPainel } from '../componentes/painel/LayoutPainel'
 import { PainelConversa } from '../componentes/painel/PainelConversa'
 import { formatarDataAtendimento, buscarHistoricoAtendimentos, excluirConversas, intervaloDoFiltro, statusAtendimento } from '../servicos/historico'
@@ -15,22 +17,9 @@ const filtrosStatus = [
   { valor: 'finalizada', rotulo: 'Finalizados' },
 ]
 
-function diaLocal(deslocamentoDias = 0) {
-  const data = new Date()
-  data.setDate(data.getDate() + deslocamentoDias)
-  const mes = String(data.getMonth() + 1).padStart(2, '0')
-  const dia = String(data.getDate()).padStart(2, '0')
-  return `${data.getFullYear()}-${mes}-${dia}`
-}
-
-const classeCampo = 'rounded-lg border border-slate-200 bg-superficie px-3 py-2 text-sm text-slate-800 outline-none transition focus:border-emerald-500 focus:ring-2 focus:ring-emerald-100'
-const classeAtalho = (ativo) => `rounded-lg px-3 py-2 text-xs font-semibold transition ${ativo ? 'bg-emerald-400 text-ink' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`
-
 export function PaginaHistorico() {
-  const [dia, definirDia] = useState('')
-  const [horaInicio, definirHoraInicio] = useState('')
-  const [horaFim, definirHoraFim] = useState('')
-  const intervalo = intervaloDoFiltro({ dia, horaInicio, horaFim })
+  const [periodo, definirPeriodo] = useState(periodoVazio)
+  const intervalo = intervaloDoFiltro(periodo)
   const inicioFiltro = intervalo?.inicio
   const fimFiltro = intervalo?.fim
   const consultaHistorico = useCallback(
@@ -74,12 +63,6 @@ export function PaginaHistorico() {
     }
   }
 
-  function limparFiltroData() {
-    definirDia('')
-    definirHoraInicio('')
-    definirHoraFim('')
-  }
-
   const contagem = (valor) => (valor === 'todos' ? historico.length : historico.filter((item) => item.status === valor).length)
 
   const cabecalho = (
@@ -111,25 +94,7 @@ export function PaginaHistorico() {
             />
           </div>
 
-          <div className="flex flex-wrap items-end gap-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <IconeCalendario className="h-4 w-4 text-slate-400" />
-              <button type="button" onClick={() => definirDia(diaLocal(0))} className={classeAtalho(dia === diaLocal(0))}>Hoje</button>
-              <button type="button" onClick={() => definirDia(diaLocal(-1))} className={classeAtalho(dia === diaLocal(-1))}>Ontem</button>
-              <button type="button" onClick={limparFiltroData} className={classeAtalho(!dia)}>Todos os dias</button>
-            </div>
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
-              Dia
-              <input type="date" value={dia} onChange={(evento) => definirDia(evento.target.value)} className={classeCampo} />
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
-              Das
-              <input type="time" value={horaInicio} onChange={(evento) => definirHoraInicio(evento.target.value)} disabled={!dia} className={`${classeCampo} disabled:opacity-50`} />
-            </label>
-            <label className="flex flex-col gap-1 text-xs text-slate-500">
-              Até
-              <input type="time" value={horaFim} onChange={(evento) => definirHoraFim(evento.target.value)} disabled={!dia} className={`${classeCampo} disabled:opacity-50`} />
-            </label>
+          <FiltroPeriodo periodo={periodo} aoMudar={definirPeriodo}>
             <button
               type="button"
               onClick={() => excluir(atendimentosVisiveis.map((item) => item.id), `${atendimentosVisiveis.length} conversa(s) listada(s)`)}
@@ -139,7 +104,7 @@ export function PaginaHistorico() {
               <IconeLixeira className="h-4 w-4" />
               {excluindo ? 'Excluindo...' : `Excluir ${atendimentosVisiveis.length} listada(s)`}
             </button>
-          </div>
+          </FiltroPeriodo>
           {erroExclusao && <p role="alert" className="text-xs text-red-600">Não foi possível excluir: {erroExclusao}</p>}
         </div>
 
@@ -202,7 +167,7 @@ export function PaginaHistorico() {
         </div>
 
         <div className="border-t border-slate-100 px-4 py-3.5 text-xs text-slate-400">
-          {atendimentosVisiveis.length} de {historico.length} atendimentos{dia ? ' no período filtrado' : ''}
+          {atendimentosVisiveis.length} de {historico.length} atendimentos{periodo.dia ? ' no período filtrado' : ''}
         </div>
       </section>
       </AvisoConsulta>

@@ -70,3 +70,40 @@ export async function buscarPerguntasFrequentes(anoMes, limite = 3) {
     quantidade: linha.vezes_utilizada ?? 0,
   }))
 }
+
+function distribuicaoEmPercentual(linhas) {
+  const totalGeral = linhas.reduce((soma, linha) => soma + Number(linha.total), 0)
+  return linhas
+    .map((linha) => ({
+      nome: linha.tema,
+      cor: linha.cor,
+      valor: totalGeral ? Math.round((Number(linha.total) / totalGeral) * 100) : 0,
+    }))
+    .sort((a, b) => b.valor - a.valor)
+}
+
+// Indicadores de um intervalo qualquer ({ inicio, fim } em ISO), no mesmo formato dos meses
+export async function buscarResumoPeriodo(intervalo) {
+  if (!intervalo) return null
+
+  const { data, error } = await supabase.rpc('painel_resumo_periodo', { p_inicio: intervalo.inicio, p_fim: intervalo.fim })
+  if (error) throw error
+
+  const resumo = data ?? {}
+  return {
+    atendimentos: Number(resumo.atendimentos ?? 0),
+    contatos: Number(resumo.contatos ?? 0),
+    resolvidos: Number(resumo.resolvidos ?? 0),
+    perguntas: Number(resumo.perguntas ?? 0),
+    tempoResposta: Number(resumo.tempo_resposta ?? 0),
+    temas: distribuicaoEmPercentual(resumo.temas ?? []),
+    frequentes: [...(resumo.frequentes ?? [])]
+      .sort((a, b) => b.vezes - a.vezes)
+      .map((linha, indice) => ({
+        posicao: indice + 1,
+        pergunta: linha.pergunta,
+        tema: linha.tema ?? 'Outros',
+        quantidade: Number(linha.vezes ?? 0),
+      })),
+  }
+}
